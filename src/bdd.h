@@ -1,50 +1,70 @@
-typedef Variable uint32_t;
-typedef BddIndex uint32_t;
+#ifndef _BDD_H_
+#define _BDD_H_
 
-type Query = ITE(A,B,C) | ... ;
+#include <cstdint>
+#include <unordered_map>
+#include <set>
+#include <stack>
 
-// TODO: template based manager stuff
-class Bdd {
-	Variable root;
-	BddIndex branch_true;
-	BddIndex branch_false;
-	uint32_t reference_count;
-	bool negated_true;
-	// TODO: how does it know which manager?
+namespace bdd {
+	typedef uint32_t Variable;
+}
 
-	Bdd(Variable var) {
-	}
+namespace bdd_internal {
+	typedef int Query; // Temporary hack
 
-	Bdd(MK_form mk) {
-	}
+	class Node {
+		public:
+			// Unique
+			bdd::Variable root;
+			Node* branch_true;
+			Node* branch_false;
+			bool negated_true;  // Is this unique?
 
-	operator+(Bdd& r) {
-	}
+			Node();
+			Node(bdd::Variable root, Node* branch_true, Node* branch_false);
 
-	synthesis() {
-	}
-};
+		private:
+			uint32_t reference_count;
+	};
 
-class BddManager {
-	// TODO: how is ordering managed?
-	Bdd nodes[]; // TODO: this can also be a free stack
-	Table<Query, Bdd*> cache;
-	Set<Bdd*> uniques;
+	class Manager {
+		public:
+			static const Node* trueBdd;
+			static const Node* falseBdd;
 
-	static const Bdd* trueBdd;
-	static const Bdd* falseBdd;
+			Manager();
+			bool add_nodes();
 
-	Bdd* new_node() {
-		// Pull off the free stack and stuff
-	}
-};
+		// TODO: how is ordering managed?
+		private:
+			static constexpr size_t alloc_size = 4096;
+			std::stack<Node(*)[alloc_size]> main_nodes;
+			// TODO: thread-local node stacks
 
-// TODO: the hashset can do something like this
-class Set<T> {
-	lookup_insert(Bdd* x) {
-		hash = h(*x);
-		if (arr[hash]->vals == *x) {
-			return;
-		}
-	}
-};
+			std::unordered_map<Query, Node*> cache;
+			std::set<Node*> uniques;
+
+			size_t thread_count;
+			// WorkStack
+	};
+
+	extern Manager manager;
+}
+
+namespace bdd {
+	using bdd_internal::Node;
+
+	class Bdd {
+		public:
+			Bdd();
+			Bdd operator+(Bdd& r);
+			Bdd operator^(Bdd& r);
+			Bdd operator&(Bdd& r);
+
+		private:
+			Node* bdd;
+	};
+}
+
+#endif
