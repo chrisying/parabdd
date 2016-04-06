@@ -6,6 +6,8 @@
 #include <set>
 #include <stack>
 
+#include "set.h"
+
 namespace bdd {
 	typedef uint32_t Variable;
 }
@@ -43,7 +45,7 @@ namespace bdd_internal {
 			// TODO: thread-local node stacks
 
 			std::unordered_map<Query, Node*> cache;
-			std::set<Node*> uniques;
+			Set<Node*> uniques;
 
 			size_t thread_count;
 			// WorkStack
