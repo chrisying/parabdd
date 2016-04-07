@@ -10,12 +10,12 @@ Manager bdd_internal::manager;
 
 static void thread_work(size_t index);
 
-Manager::Manager() : thread_count(std::thread::hardware_concurrency()), threads(thread_count), notifiers(new ThreadWork[thread_count]) {
+Manager::Manager() : threads(std::thread::hardware_concurrency()) {
 
 	add_nodes();
 
-	for (size_t i = 0; i < thread_count; i++) {
-		std::thread worker_thread(thread_work, i);
+	for (size_t i = std::thread::hardware_concurrency(); i > 0; i--) {
+		std::thread worker_thread(thread_work);
 		worker_thread.detach();
 	}
 }
@@ -28,17 +28,23 @@ bool Manager::add_nodes() {
 		return false;
 	}
 
+	main_nodes_lock.lock();
+
 	for (size_t i = 0; i < alloc_count; i++) {
 		main_nodes.push(&new_nodes[i]);
 	}
 
+	main_nodes_lock.unlock();
+
 	return true;
 }
 
-void Manager::thread_work(size_t index) {
-	ThreadWork& work = manager.notifiers[index];
+void Manager::thread_work() {
+	thread_local std::stack<Node*> free_nodes;
+	thread_local ThreadWork work;
+
 	// We'll hold this lock whenever we're not in the queue
-	work.lock.lock();
+	std::lock_guard<std::unique_lock<std::mutex>> lock(work.lock);
 
 	while (true) {
 		// Mark that we're waiting for work
@@ -54,12 +60,7 @@ void Manager::thread_work(size_t index) {
 		//
 
 
-		// Store the result of the work
-		work.result->lock.lock();
-		work.result->data = nullptr; // Store data here
-		work.result->lock.unlock();
-
-		// Notify the user that it's ready
-		work.result->ready.notify_one();
+		// Store the result of the work and notify the user that it's ready
+		work.result->submit(nullptr);
 	}
 }

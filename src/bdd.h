@@ -35,21 +35,39 @@ namespace bdd_internal {
 			uint32_t reference_count;
 	};
 
-	typedef struct WorkResult {
+	struct WorkResult {
 		std::unique_lock<std::mutex> lock;
 		std::condition_variable ready;
 		Node* data;
-	} WorkResult;
 
-	typedef struct alignas(cache_width) ThreadWork {
+		void submit(Node* result) {
+			lock.lock();
+			data = result;
+			lock.unlock();
+
+			ready.notify_one();
+		}
+	};
+
+	struct alignas(cache_width) ThreadWork {
 		std::unique_lock<std::mutex> lock;
 		std::condition_variable ready;
 		uint32_t work;
 		WorkResult* result;
-	} ThreadWork;
+
+		void submit(uint32_t& new_work, WorkResult* result_loc) {
+			lock.lock();
+			work = new_work;
+			result = result_loc;
+			lock.unlock();
+
+			ready.notify_one();
+		}
+	};
 
 	class Manager {
 		public:
+			// SeemsGood -- Documented GCC/Clang builtins hack
 			static constexpr Node* trueBdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
 			static constexpr Node* falseBdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
@@ -57,21 +75,19 @@ namespace bdd_internal {
 			bool add_nodes();
 			// Add a function to do work on behalf of threads
 
-			static void thread_work(size_t index);
+			static void thread_work();
 
 		// TODO: how is ordering managed?
 		private:
 			static constexpr size_t alloc_size = 4096;
+			std::mutex main_nodes_lock;
 			std::stack<Node(*)[alloc_size]> main_nodes;
+
 			std::unordered_map<Query, Node*> cache;
 			Set<Node*> uniques;
 
 			// TODO: thread-local node stacks
 			// Threaded stuff here
-
-			size_t thread_count;
-			ThreadWork* notifiers;
-			std::stack<Node*>* free_nodes;
 
 			Queue<ThreadWork*> threads;
 	};
