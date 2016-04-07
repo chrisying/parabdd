@@ -1,4 +1,5 @@
 CC=g++ -std=c++1y
+CFLAGS=-pthread
 
 FILES=bdd manager node parabdd
 OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
@@ -8,10 +9,10 @@ OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
 all: parabdd
 
 parabdd: $(OBJECTS)
-	$(CC) $(OBJECTS) -o parabdd
+	$(CC) $(CFLAGS) $(OBJECTS) -o parabdd
 
 bin/%.o: src/%.cpp src/bdd.h
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f bin/*.o

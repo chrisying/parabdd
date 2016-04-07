@@ -6,7 +6,4 @@ using namespace bdd_internal;
 
 Node::Node() { }
 
-Node::Node(bdd::Variable root, Node* branch_true, Node* branch_false) {
-	// TODO: look up the node in the table then create a new one
-	assert(false);
-}
+Node::Node(bdd::Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
