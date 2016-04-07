@@ -40,7 +40,7 @@ bool Manager::add_nodes() {
 	return true;
 }
 
-Node* Manager::MK(bdd::Variable root, Node* branch_true, Node* branch_false) {
+Node* Manager::make(bdd::Variable root, Node* branch_true, Node* branch_false) {
     if (branch_true == branch_false) {
         return branch_false;
     }
@@ -50,19 +50,49 @@ Node* Manager::MK(bdd::Variable root, Node* branch_true, Node* branch_false) {
 }
 
 Node* Manager::ITE(Node* A, Node* B, Node* C) {
-    if (A == trueBdd) { return B; }
-    if (A == falseBdd) { return C; }
+    if (A == true_bdd) { return B; }
+    if (A == false_bdd) { return C; }
 
     // TODO: check if this ITE has been done before in cache
 
     bdd::Variable x = std::max(std::max(A->root, B->root), C->root);
-    return nullptr;
+    Node* A_false = evaluate_at(A, x, false);
+    Node* B_false = evaluate_at(B, x, false);
+    Node* C_false = evaluate_at(C, x, false);
+    Node* A_true = evaluate_at(A, x, true);
+    Node* B_true = evaluate_at(B, x, true);
+    Node* C_true = evaluate_at(C, x, true);
+
+    Node* R_false = ITE(A_false, B_false, C_false);
+    Node* R_true = ITE(A_true, B_true, C_true);
+
+    Node* result = make(x, R_true, R_false);
+
+    // TODO: put in cache
+
+    return result;
 }
 
-Node* Manager::evaluateFalse(Node* node, bdd::Variable var) {
+Node* Manager::evaluate_at(Node* node, bdd::Variable var, bool value) {
     // Evaluates the tree with var set to false and returns a Node*
-    // Should use MK
-    return nullptr;
+    if (node->root == var) {
+        if (value) {
+            return node->branch_true;
+        } else {
+            return node->branch_false;
+        }
+    }
+
+    Node* new_node;
+    if (value) {
+        new_node = make(var, evaluate_at(node->branch_true, var, value), evaluate_at(node->branch_false, var, value));
+    } else {
+        new_node = make(var, evaluate_at(node->branch_true, var, value), evaluate_at(node->branch_false, var, value));
+    }
+
+    // TODO: possibly cache this
+
+    return new_node;
 }
 
 void Manager::thread_work() {
