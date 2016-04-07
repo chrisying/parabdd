@@ -29,6 +29,7 @@ namespace bdd_internal {
 			Node* branch_false;
 
 			Node();
+            // Creates node on stack, should be used in MK to get heap pointer
 			Node(bdd::Variable root, Node* branch_true, Node* branch_false);
 
 		private:
@@ -55,6 +56,12 @@ namespace bdd_internal {
 
 			Manager();
 			bool add_nodes();
+
+            // TODO: MK, ITE, and other related functions should be somewhere else probably
+            // Returns a pointer on the heap
+            static Node* MK(bdd::Variable root, Node* branch_true, Node* branch_false);
+            static Node* ITE(Node* A, Node* B, Node* C);
+
 			// Add a function to do work on behalf of threads
 
 			static void thread_work(size_t index);
@@ -65,6 +72,11 @@ namespace bdd_internal {
 			std::stack<Node(*)[alloc_size]> main_nodes;
 			std::unordered_map<Query, Node*> cache;
 			Set<Node*> uniques;
+
+            // private functions for MK or ITE
+            // TODO: probably combine these two
+            static Node* evaluateFalse(Node* node, bdd::Variable var);
+            static Node* evaluateTrue(Node* node, bdd::Variable var);
 
 			// TODO: thread-local node stacks
 			// Threaded stuff here
