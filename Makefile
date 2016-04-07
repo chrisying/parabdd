@@ -1,10 +1,15 @@
-CC=g++ -std=c++11
+CC=g++ -std=c++1y
 
-all: $(addsuffix .o,bdd manager node parabdd)
-	$(CC) $(addprefix bin/,$(addsuffix .o,bdd manager node parabdd)) -o parabdd
+FILES=bdd manager node parabdd
+OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
 
-%.o: src/%.cpp
-	$(CC) -c $< -o bin/$@
+.PHONY: all clean veryclean
+
+all: $(OBJECTS)
+	$(CC) $(OBJECTS) -o parabdd
+
+bin/%.o: src/%.cpp
+	$(CC) -c $< -o $@
 
 clean:
 	rm -f bin/*.o

@@ -27,7 +27,6 @@ namespace bdd_internal {
 			bdd::Variable root;
 			Node* branch_true;
 			Node* branch_false;
-			bool negated_true;  // Is this unique?
 
 			Node();
 			Node(bdd::Variable root, Node* branch_true, Node* branch_false);
@@ -51,8 +50,9 @@ namespace bdd_internal {
 
 	class Manager {
 		public:
-			static constexpr Node* trueBdd = reinterpret_cast<Node*>(1);
-			static constexpr Node* falseBdd = reinterpret_cast<Node*>(2);
+			static constexpr Node* zero = nullptr;
+			static constexpr Node* trueBdd = zero + 1;
+			static constexpr Node* falseBdd = zero + 2;
 
 			Manager();
 			bool add_nodes();
@@ -72,6 +72,8 @@ namespace bdd_internal {
 
 			size_t thread_count;
 			ThreadWork* notifiers;
+			std::stack<Node*>* free_nodes;
+
 			Queue<ThreadWork*> threads;
 	};
 
