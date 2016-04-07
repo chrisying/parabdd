@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <set>
 #include <stack>
+#include <thread>
+#include <condition_variable>
 
 #include "set.h"
+#include "queue.h"
 
 namespace bdd {
 	typedef uint32_t Variable;
@@ -14,6 +17,9 @@ namespace bdd {
 
 namespace bdd_internal {
 	typedef int Query; // Temporary hack
+
+	// Cache line width (bytes) on x86
+	constexpr size_t cache_width = 64;
 
 	class Node {
 		public:
@@ -30,25 +36,43 @@ namespace bdd_internal {
 			uint32_t reference_count;
 	};
 
+	typedef struct WorkResult {
+		std::unique_lock<std::mutex> lock;
+		std::condition_variable ready;
+		Node* data;
+	} WorkResult;
+
+	typedef struct alignas(cache_width) ThreadWork {
+		std::unique_lock<std::mutex> lock;
+		std::condition_variable ready;
+		uint32_t work;
+		WorkResult* result;
+	} ThreadWork;
+
 	class Manager {
 		public:
-			static const Node* trueBdd;
-			static const Node* falseBdd;
+			static constexpr Node* trueBdd = reinterpret_cast<Node*>(1);
+			static constexpr Node* falseBdd = reinterpret_cast<Node*>(2);
 
 			Manager();
 			bool add_nodes();
+			// Add a function to do work on behalf of threads
+
+			static void thread_work(size_t index);
 
 		// TODO: how is ordering managed?
 		private:
 			static constexpr size_t alloc_size = 4096;
 			std::stack<Node(*)[alloc_size]> main_nodes;
-			// TODO: thread-local node stacks
-
 			std::unordered_map<Query, Node*> cache;
 			Set<Node*> uniques;
 
+			// TODO: thread-local node stacks
+			// Threaded stuff here
+
 			size_t thread_count;
-			// WorkStack
+			ThreadWork* notifiers;
+			Queue<ThreadWork*> threads;
 	};
 
 	extern Manager manager;
