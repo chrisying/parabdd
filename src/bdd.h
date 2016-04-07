@@ -50,9 +50,8 @@ namespace bdd_internal {
 
 	class Manager {
 		public:
-			static constexpr Node* zero = nullptr;
-			static constexpr Node* trueBdd = zero + 1;
-			static constexpr Node* falseBdd = zero + 2;
+			static constexpr Node* trueBdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
+			static constexpr Node* falseBdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
 			Manager();
 			bool add_nodes();

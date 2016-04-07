@@ -5,10 +5,12 @@ OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
 
 .PHONY: all clean veryclean
 
-all: $(OBJECTS)
+all: parabdd
+
+parabdd: $(OBJECTS)
 	$(CC) $(OBJECTS) -o parabdd
 
-bin/%.o: src/%.cpp
+bin/%.o: src/%.cpp src/bdd.h
 	$(CC) -c $< -o $@
 
 clean:
