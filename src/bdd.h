@@ -49,7 +49,7 @@ namespace bdd_internal {
 		}
 	};
 
-	struct alignas(cache_width) ThreadWork {
+	struct ThreadWork {
 		std::unique_lock<std::mutex> lock;
 		std::condition_variable ready;
 		uint32_t work;
