@@ -109,7 +109,6 @@ namespace bdd {
 		public:
 			Bdd();
 			Bdd(Variable var);
-			Bdd(internal::Node* node);
 			Bdd operator&(Bdd& r);
 			Bdd operator+(Bdd& r);
 			Bdd operator^(Bdd& r);

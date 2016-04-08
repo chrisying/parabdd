@@ -22,6 +22,7 @@ namespace bdd {
 			if (A == false_bdd) { return C; }
 
 			// TODO: check if this ITE has been done before in cache
+            // TODO: normalization rules
 
 			bdd::Variable x = std::max(std::max(A->root, B->root), C->root);
 			Node* A_false = evaluate_at(A, x, false);
