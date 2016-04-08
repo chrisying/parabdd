@@ -78,40 +78,32 @@ namespace bdd_internal {
 		}
 	};
 
-	class Manager {
-		public:
-			// SeemsGood -- Documented GCC/Clang builtins hack
-			static constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
-			static constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
+	namespace manager {
+		// SeemsGood -- Documented GCC/Clang builtins hack
+		constexpr size_t alloc_size = 4096;
+		constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
+		constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
-			Manager();
-			bool add_nodes();
+		bool add_nodes();
 
-            // TODO: MK, ITE, and other related functions should be somewhere else probably
-            // Returns a pointer on the heap
-            static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
-            static Node* ITE(Node* A, Node* B, Node* C);
+		// TODO: MK, ITE, and other related functions should be somewhere else probably
+		// Returns a pointer on the heap
+		Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
+		Node* ITE(Node* A, Node* B, Node* C);
+		Node* evaluate_at(Node* node, bdd::Variable var, bool value);
 
-			// Add a function to do work on behalf of threads
-
-			static void thread_work();
+		// Add a function to do work on behalf of threads
+		void thread_work();
 
 		// TODO: how is ordering managed?
-		private:
-			static constexpr size_t alloc_size = 4096;
-			std::mutex main_nodes_lock;
-			std::stack<Node(*)[alloc_size]> main_nodes;
+		extern std::mutex main_nodes_lock;
+		extern std::stack<Node(*)[alloc_size]> main_nodes;
 
-			std::unordered_map<Query, Node*> cache;
-			Set<Node*> uniques;
+		extern std::unordered_map<Query, Node*> cache;
+		extern Set<Node*> uniques;
 
-			// TODO: this probably shouldn't be here
-            static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-
-			Queue<ThreadWork*> threads;
-	};
-
-	extern Manager manager;
+		extern Queue<ThreadWork*> threads;
+	}
 }
 
 namespace bdd {

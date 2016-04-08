@@ -1,4 +1,4 @@
-CC=g++ -std=c++1y
+CC=g++ -std=c++11
 CFLAGS=-pthread
 
 FILES=bdd manager node parabdd
