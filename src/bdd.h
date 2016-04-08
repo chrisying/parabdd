@@ -24,17 +24,22 @@ namespace bdd_internal {
 	constexpr size_t cache_width = 64;
 
 	// Our internal BDD representation
-	// TODO: use complemented edges
 	class Node {
 		public:
 			// Uniquely identifying BDDs in canonical form
 			bdd::Variable root;
+            // TODO: complement on a node (canonicity self-enforced, not by type)
 			Node* branch_true;
 			Node* branch_false;
 
 			Node();
             // Creates node on stack, should be used in MK to get heap pointer
 			Node(bdd::Variable root, Node* branch_true, Node* branch_false);
+
+            static Node* make_node(bdd::Variable root, Node* branch_true, Node* branch_false);
+            static Node* ITE(Node* A, Node* B, Node* C);
+            static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
+            static Node* complement(Node* node);
 
 		private:
 			// A reference count for freeing temporary BDDs
@@ -86,12 +91,6 @@ namespace bdd_internal {
 
 		bool add_nodes();
 
-		// TODO: MK, ITE, and other related functions should be somewhere else probably
-		// Returns a pointer on the heap
-		Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
-		Node* ITE(Node* A, Node* B, Node* C);
-		Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-
 		// Add a function to do work on behalf of threads
 		void thread_work();
 
@@ -112,9 +111,11 @@ namespace bdd {
 	class Bdd {
 		public:
 			Bdd();
+            Bdd(Variable var);
+            Bdd(bdd_internal::Node* node);
+			Bdd operator&(Bdd& r);
 			Bdd operator+(Bdd& r);
 			Bdd operator^(Bdd& r);
-			Bdd operator&(Bdd& r);
 
 		private:
 			Node* bdd;
