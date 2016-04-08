@@ -14,109 +14,107 @@
 namespace bdd {
 	// The type of a BDD variable
 	typedef uint32_t Variable;
-}
 
-namespace bdd_internal {
-	typedef int Query; // Temporary hack
-	typedef int Work; // Temporary hack
+	namespace internal {
+		typedef int Query; // Temporary hack
+		typedef int Work; // Temporary hack
 
-	// Cache line width (bytes) on x86
-	constexpr size_t cache_width = 64;
+		// Cache line width (bytes) on x86
+		constexpr size_t cache_width = 64;
 
-	// Our internal BDD representation
-	// TODO: use complemented edges
-	class Node {
-		public:
-			// Uniquely identifying BDDs in canonical form
-			bdd::Variable root;
-			Node* branch_true;
-			Node* branch_false;
+		// Our internal BDD representation
+		class Node {
+			public:
+				// Uniquely identifying BDDs in canonical form
+				bdd::Variable root;
+				// TODO: complement on a node (canonicity self-enforced, not by type)
+				Node* branch_true;
+				Node* branch_false;
 
-			Node();
-            // Creates node on stack, should be used in MK to get heap pointer
-			Node(bdd::Variable root, Node* branch_true, Node* branch_false);
+				Node();
+				// Creates node on stack, should be used in MK to get heap pointer
+				Node(bdd::Variable root, Node* branch_true, Node* branch_false);
 
-		private:
-			// A reference count for freeing temporary BDDs
-			uint32_t reference_count;
-	};
+				static Node* make_node(bdd::Variable root, Node* branch_true, Node* branch_false);
+				static Node* ITE(Node* A, Node* B, Node* C);
+				static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
+				static Node* complement(Node* node);
 
-	// Stores the result of a future computation, allowing the creator to
-	// wait for it to be completed.
-	struct WorkResult {
-		std::mutex lock;
-		std::condition_variable ready;
-		Node* data;
+			private:
+				// A reference count for freeing temporary BDDs
+				uint32_t reference_count;
+		};
 
-		// Submit a result, waking the creator if necessary
-		void submit(Node* result) {
-			lock.lock();
-			data = result;
-			lock.unlock();
+		// Stores the result of a future computation, allowing the creator to
+		// wait for it to be completed.
+		struct WorkResult {
+			std::mutex lock;
+			std::condition_variable ready;
+			Node* data;
 
-			ready.notify_one();
+			// Submit a result, waking the creator if necessary
+			void submit(Node* result) {
+				lock.lock();
+				data = result;
+				lock.unlock();
+
+				ready.notify_one();
+			}
+		};
+
+		// Stores the work area for a thread, allowing users to submit a job
+		// and provide an area to write the result to.
+		// The owning thread will sleep until notified by `submit` that a job
+		// is available.
+		struct ThreadWork {
+			std::mutex lock;
+			std::condition_variable ready;
+			Work work;
+			WorkResult* result;
+
+			void submit(Work& new_work, WorkResult* result_loc) {
+				lock.lock();
+				work = new_work;
+				result = result_loc;
+				lock.unlock();
+
+				ready.notify_one();
+			}
+		};
+
+		namespace manager {
+			// SeemsGood -- Documented GCC/Clang builtins hack
+			constexpr size_t alloc_size = 4096;
+			constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
+			constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
+
+			bool add_nodes();
+
+
+			// TODO: Add a function to do work on behalf of threads
+
+			// TODO: how is ordering managed?
+			extern std::mutex main_nodes_lock;
+			extern std::stack<Node(*)[alloc_size]> main_nodes;
+
+			extern std::unordered_map<Query, Node*> cache;
+			extern Set<Node*> uniques;
+
+			extern Queue<ThreadWork*> threads;
 		}
-	};
-
-	// Stores the work area for a thread, allowing users to submit a job
-	// and provide an area to write the result to.
-	// The owning thread will sleep until notified by `submit` that a job
-	// is available.
-	struct ThreadWork {
-		std::mutex lock;
-		std::condition_variable ready;
-		Work work;
-		WorkResult* result;
-
-		void submit(uint32_t& new_work, WorkResult* result_loc) {
-			lock.lock();
-			work = new_work;
-			result = result_loc;
-			lock.unlock();
-
-			ready.notify_one();
-		}
-	};
-
-	namespace manager {
-		// SeemsGood -- Documented GCC/Clang builtins hack
-		constexpr size_t alloc_size = 4096;
-		constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
-		constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
-
-		bool add_nodes();
-
-		// TODO: MK, ITE, and other related functions should be somewhere else probably
-		// Returns a pointer on the heap
-		Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
-		Node* ITE(Node* A, Node* B, Node* C);
-		Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-
-		// TODO: Add a function to do work on behalf of threads
-
-		// TODO: how is ordering managed?
-		extern std::mutex main_nodes_lock;
-		extern std::stack<Node(*)[alloc_size]> main_nodes;
-
-		extern std::unordered_map<Query, Node*> cache;
-		extern Set<Node*> uniques;
-
-		extern Queue<ThreadWork*> threads;
 	}
-}
-
-namespace bdd {
-	using bdd_internal::Node;
 
 	class Bdd {
 		public:
 			Bdd();
+			Bdd(Variable var);
+			Bdd(internal::Node* node);
+			Bdd operator&(Bdd& r);
 			Bdd operator+(Bdd& r);
 			Bdd operator^(Bdd& r);
-			Bdd operator&(Bdd& r);
 
 		private:
-			Node* bdd;
+			internal::Node* bdd;
 	};
 }
 
