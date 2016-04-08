@@ -14,7 +14,7 @@ namespace bdd {
 			}
 
 			Node node = Node(root, branch_true, branch_false);
-			return manager.uniques.lookupOrCreate(&node);
+			return manager::uniques.lookupOrCreate(&node);
 		}
 
 		Node* Node::ITE(Node* A, Node* B, Node* C) {

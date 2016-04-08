@@ -114,7 +114,8 @@ namespace bdd {
 			Bdd operator^(Bdd& r);
 
 		private:
-			internal::Node* bdd;
+            Bdd(internal::Node* node);
+			internal::Node* node;
 	};
 }
 

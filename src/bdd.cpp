@@ -4,21 +4,19 @@
 #include "bdd.h"
 
 namespace bdd {
-	Bdd::Bdd() : bdd(nullptr) { }
+	Bdd::Bdd() : node(nullptr) { }
 
     Bdd::Bdd(Variable var) {
-        bdd = bdd::Node::make_node(var, bdd::Node::true_bdd, bdd::Node::false_bdd);
+        node = internal::Node::make(var, internal::Node::true_bdd, internal::Node::false_bdd);
     }
 
-    Bdd::Bdd(bdd::Node* node) {
-        bdd = node;
-    }
+    Bdd::Bdd(internal::Node* node) : node(node) { }
 
     Bdd Bdd::operator&(Bdd& r) {
-        return bdd::Node::ITE(this->bdd, r.bdd, bdd::Node::false_bdd);
+        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_bdd));
     }
 
 	Bdd Bdd::operator+(Bdd& r) {
-        return bdd::Node::ITE(this->bdd, bdd::Node::true_bdd, r.bdd);
+        return internal::Node::ITE(this->node, internal::Node::true_bdd, r.node);
 	}
 }
