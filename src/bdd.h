@@ -25,6 +25,10 @@ namespace bdd {
 		// Our internal BDD representation
 		class Node {
 			public:
+				// SeemsGood -- Documented GCC/Clang builtins hack
+				static constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
+				static constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
+
 				// Uniquely identifying BDDs in canonical form
 				bdd::Variable root;
 				// TODO: complement on a node (canonicity self-enforced, not by type)
@@ -35,7 +39,7 @@ namespace bdd {
 				// Creates node on stack, should be used in MK to get heap pointer
 				Node(bdd::Variable root, Node* branch_true, Node* branch_false);
 
-				static Node* make_node(bdd::Variable root, Node* branch_true, Node* branch_false);
+				static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
 				static Node* ITE(Node* A, Node* B, Node* C);
 				static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
 				static Node* complement(Node* node);
@@ -83,10 +87,7 @@ namespace bdd {
 		};
 
 		namespace manager {
-			// SeemsGood -- Documented GCC/Clang builtins hack
 			constexpr size_t alloc_size = 4096;
-			constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
-			constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
 			bool add_nodes();
 
