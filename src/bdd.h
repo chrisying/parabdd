@@ -44,7 +44,7 @@ namespace bdd_internal {
 	// Stores the result of a future computation, allowing the creator to
 	// wait for it to be completed.
 	struct WorkResult {
-		std::unique_lock<std::mutex> lock;
+		std::mutex lock;
 		std::condition_variable ready;
 		Node* data;
 
@@ -63,7 +63,7 @@ namespace bdd_internal {
 	// The owning thread will sleep until notified by `submit` that a job
 	// is available.
 	struct ThreadWork {
-		std::unique_lock<std::mutex> lock;
+		std::mutex lock;
 		std::condition_variable ready;
 		Work work;
 		WorkResult* result;
@@ -92,8 +92,7 @@ namespace bdd_internal {
 		Node* ITE(Node* A, Node* B, Node* C);
 		Node* evaluate_at(Node* node, bdd::Variable var, bool value);
 
-		// Add a function to do work on behalf of threads
-		void thread_work();
+		// TODO: Add a function to do work on behalf of threads
 
 		// TODO: how is ordering managed?
 		extern std::mutex main_nodes_lock;
