@@ -26,23 +26,25 @@ namespace bdd {
 		class Node {
 			public:
 				// SeemsGood -- Documented GCC/Clang builtins hack
+                // TODO: to be consistent, shouldn't these be called true_node and false_node?
 				static constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
 				static constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
 				// Uniquely identifying BDDs in canonical form
 				bdd::Variable root;
-				// TODO: complement on a node (canonicity self-enforced, not by type)
+                bool complemented; // Whether the edge ENTERING this node is complemented
 				Node* branch_true;
 				Node* branch_false;
 
 				Node();
 				// Creates node on stack, should be used in MK to get heap pointer
-				Node(bdd::Variable root, Node* branch_true, Node* branch_false);
+				Node(bdd::Variable root, bool complemented, Node* branch_true, Node* branch_false);
 
 				static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
 				static Node* ITE(Node* A, Node* B, Node* C);
 				static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-				static Node* complement(Node* node);
+				static Node* complement(Node* node); // Returns pointer to unique node with complemented
+                static bool equals_complement(Node* A, Node* B); // TODO: this doesn't have to be static!
 
 			private:
 				// A reference count for freeing temporary BDDs
