@@ -1,3 +1,8 @@
+#ifndef _NODESET_H_
+#define _NODESET_H_
+
+#include <list>
+
 #include "node.h"
 
 // Lockfree set Kappa
@@ -9,3 +14,5 @@ class NodeSet {
         // Single-threaded implementation
         std::list<bdd::internal::Node*> _set;
 };
+
+#endif

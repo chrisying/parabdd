@@ -18,11 +18,11 @@ namespace bdd {
                 Node* new_true = complement(branch_true);
                 Node* new_false = complement(branch_false);
                 Node node = Node(root, true, new_true, new_false);
-                return manager::uniques.lookupOrCreate(&node);
+                return manager::nodes.lookupOrCreate(node);
             }
 
 			Node node = Node(root, false, branch_true, branch_false);
-			return manager::uniques.lookupOrCreate(&node);
+			return manager::nodes.lookupOrCreate(node);
 		}
 
 		Node* Node::ITE(Node* A, Node* B, Node* C) {
@@ -123,7 +123,7 @@ namespace bdd {
         // TODO: should this be inline?
         Node* Node::complement(Node* node) {
             Node new_node = Node(node->root, !node->complemented, node->branch_true, node->branch_false);
-            return manager::uniques.lookupOrCreate(&new_node);
+            return manager::nodes.lookupOrCreate(new_node);
         }
 
         // Should only be used with nodes ALREADY in canonical form (outputs of make and ITE)

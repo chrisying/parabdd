@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "node.h"
+#include "nodeset.h"
 
 namespace bdd {
 	namespace internal {
