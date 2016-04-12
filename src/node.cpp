@@ -94,25 +94,28 @@ namespace bdd {
 		}
 
 		Node* Node::evaluate_at(Node* node, bdd::Variable var, bool value) {
-            // TODO: base cases (true/false)
+            // Variable is above this node, nothing changes
+            if (node->root > var) {
+                return node;
+            }
 
-			// Evaluates the tree with var set to false and returns a Node*
+            // Variable is exactly this node, choose appropriate branch
 			if (node->root == var) {
-				if (value) {
-					return node->branch_true;
-				} else {
-					return node->branch_false;
-				}
+                // Logical XOR
+                return value != node->complemented ? node->branch_true : node->branch_false;
 			}
 
+            // TODO: check cache now
+
+            // Variable is below this node, recurse
 			Node* new_node;
-			if (value) {
+			if (value != node->complemented) { // Logical XOR
 				new_node = make(var, evaluate_at(node->branch_true, var, value), evaluate_at(node->branch_false, var, value));
 			} else {
-				new_node = make(var, evaluate_at(node->branch_true, var, value), evaluate_at(node->branch_false, var, value));
+				new_node = make(var, evaluate_at(node->branch_false, var, value), evaluate_at(node->branch_true, var, value));
 			}
 
-			// TODO: possibly cache this
+			// TODO: cache new_node
 
 			return new_node;
 		}
