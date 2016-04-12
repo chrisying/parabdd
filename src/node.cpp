@@ -15,10 +15,10 @@ namespace bdd {
 
             // Enforce canonicity (complement only on 1 edge)
             if (branch_false->complemented) {
-                Node new_true = complement(branch_true);
-                Node new_false = complement(branch_false);
+                Node* new_true = complement(branch_true);
+                Node* new_false = complement(branch_false);
                 Node node = Node(root, true, new_true, new_false);
-                return manager::unique.lookupOrCreate(&node);
+                return manager::uniques.lookupOrCreate(&node);
             }
 
 			Node node = Node(root, false, branch_true, branch_false);
@@ -121,13 +121,14 @@ namespace bdd {
 		}
 
         // TODO: should this be inline?
-        Node* complement(Node* node) {
-            return manager::uniques.lookupOrCreate(&Node(node->root, !node->complemented, node->branch_true, node->branch_false));
+        Node* Node::complement(Node* node) {
+            Node new_node = Node(node->root, !node->complemented, node->branch_true, node->branch_false);
+            return manager::uniques.lookupOrCreate(&new_node);
         }
 
         // Should only be used with nodes ALREADY in canonical form (outputs of make and ITE)
         // TODO: should I consider the case where complement is the same but A->true == B->false and vice versa
-        bool equals_complement(Node* A, Node* B) {
+        bool Node::equals_complement(Node* A, Node* B) {
             return (A->root == B->root && A->complemented != B->complemented && A->branch_true == B->branch_true && A->branch_false == B->branch_false);
         }
 
