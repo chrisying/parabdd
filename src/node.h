@@ -31,14 +31,14 @@ namespace bdd {
                 static Node* ITE(Node* A, Node* B, Node* C);
 
                 // TODO: static inlines?
-                static bool is_leaf(Node* node);
-                static Variable top_variable(Node* A, Node* B, Node* C);
+                static inline bool is_leaf(Node* node);
+                static inline Variable top_variable(Node* A, Node* B, Node* C);
                 // TODO: should any of these be nonstatic?
-                static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-                static Node* complement(Node* node); // Returns pointer to unique node with complemented
-                static bool is_complemented(Node* node); // Returns pointer to unique node with complemented
-                static Node deref(Node* node);
-                static bool equals_complement(Node* A, Node* B); // TODO: this doesn't have to be static!
+                static inline Node* evaluate_at(Node* node, bdd::Variable var, bool value);
+                static inline Node* complement(Node* node); // Returns pointer to unique node with complemented
+                static inline bool is_complemented(Node* node); // Returns pointer to unique node with complemented
+                static inline Node deref(Node* node);
+                static inline bool equals_complement(Node* A, Node* B); // TODO: this doesn't have to be static!
 
             private:
                 // A reference count for freeing temporary BDDs
