@@ -1,4 +1,5 @@
 #include <cassert>
+#include <limits>
 
 #include "bdd.h"
 
@@ -14,10 +15,10 @@ namespace bdd {
 			}
 
             // Enforce canonicity (complement only on 1 edge)
-            if (branch_false->complemented) {
+            if ((!is_leaf(branch_false) && branch_false->complemented) || branch_false == true_node || branch_true == true_node) {
                 Node* new_true = complement(branch_true);
                 Node* new_false = complement(branch_false);
-                Node node = Node(root, true, new_true, new_false);
+                Node node(root, true, new_true, new_false);
                 return manager::nodes.lookupOrCreate(node);
             }
 
@@ -27,10 +28,10 @@ namespace bdd {
 
 		Node* Node::ITE(Node* A, Node* B, Node* C) {
             // Base cases
-			if (A == true_bdd) { return B; }
-			if (A == false_bdd) { return C; }
-            if (B == true_bdd && C == false_bdd) { return A; }
-            if (B == false_bdd && C == true_bdd) { return complement(A); }
+			if (A == true_node) { return B; }
+			if (A == false_node) { return C; }
+            if (B == true_node && C == false_node) { return A; }
+            if (B == false_node && C == true_node) { return complement(A); }
             if (B == C) { return B; }
 
 			// TODO: check if this ITE has been done before in cache
@@ -41,40 +42,40 @@ namespace bdd {
 
             if (A == B) {
                 // ITE(A,A,C) -> ITE(A,1,C)
-                result = ITE(A, true_bdd, C);
+                result = ITE(A, true_node, C);
             } else if (equals_complement(A, B)) {
                 // ITE(A,!A,C) -> ITE(A,0,C)
-                result = ITE(A, false_bdd, C);
+                result = ITE(A, false_node, C);
             } else if (A == C) {
                 // ITE(A,B,A) -> ITE(A,B,0)
-                result = ITE(A, B, false_bdd);
+                result = ITE(A, B, false_node);
             } else if (equals_complement(A, C)) {
                 // ITE(A,B,!A) -> ITE(A,B,1)
-                result = ITE(A, B, true_bdd);
-            } else if (B == true_bdd && C->root < A->root) {
+                result = ITE(A, B, true_node);
+            } else if (B == true_node && C->root < A->root) {
                 // ITE(A,1,C) -> ITE(C,1,A) if C < A
-                result = ITE(C, true_bdd, A);
-            } else if (B == false_bdd && C->root < A->root) {
+                result = ITE(C, true_node, A);
+            } else if (B == false_node && C->root < A->root) {
                 // ITE(A,0,C) -> ITE(!C,0,!A) if C < A
-                result = ITE(complement(C), false_bdd, complement(A));
-            } else if (C == true_bdd && B->root < A->root) {
+                result = ITE(complement(C), false_node, complement(A));
+            } else if (C == true_node && B->root < A->root) {
                 // ITE(A,B,1) -> ITE(!B,!A,1) if B < A
-                result = ITE(complement(B), complement(A), true_bdd);
-            } else if (C == false_bdd && B->root < A->root) {
+                result = ITE(complement(B), complement(A), true_node);
+            } else if (C == false_node && B->root < A->root) {
                 // ITE(A,B,0) -> ITE(B,A,0) if B < A
-                result = ITE(B, A, false_bdd);
+                result = ITE(B, A, false_node);
             } else if (equals_complement(B, C) && B->root < C->root) {
                 // ITE(A,B,!B) -> ITE(B,A,!A)
                 result = ITE(B, A, complement(A));
             } else if (A->complemented) {
                 // ITE(A,B,C) -> ITE(!A,C,B) if A complemented
                 result = ITE(complement(A), C, B);
-            } else if (B->complemented) {
+            } else if (!is_leaf(B) && B->complemented) {
                 // ITE(A,B,C) -> !ITE(A,!B,!C) if B complemented
                 result = complement(ITE(A, complement(B), complement(C)));
             } else {
                 // If no normalization applies
-                bdd::Variable x = std::max(std::max(A->root, B->root), C->root);
+                Variable x = top_variable(A, B, C);
                 Node* A_false = evaluate_at(A, x, false);
                 Node* B_false = evaluate_at(B, x, false);
                 Node* C_false = evaluate_at(C, x, false);
@@ -93,9 +94,21 @@ namespace bdd {
 			return result;
 		}
 
+        bool Node::is_leaf(Node* node) {
+            return node == true_node || node == false_node;
+        }
+
+        Variable Node::top_variable(Node* A, Node* B, Node* C) {
+            auto var = [] (Node* x) {
+                return (is_leaf(x) ? std::numeric_limits<Variable>::max() : x->root);
+            };
+
+            return std::min(var(A), std::min(var(B), var(C)));
+        }
+
 		Node* Node::evaluate_at(Node* node, bdd::Variable var, bool value) {
             // Variable is above this node, nothing changes
-            if (node->root > var) {
+            if (is_leaf(node) || node->root > var) {
                 return node;
             }
 
@@ -122,6 +135,12 @@ namespace bdd {
 
         // TODO: should this be inline?
         Node* Node::complement(Node* node) {
+            if (node == true_node) {
+                return false_node;
+            } else if (node == false_node) {
+                return true_node;
+            }
+
             Node new_node = Node(node->root, !node->complemented, node->branch_true, node->branch_false);
             return manager::nodes.lookupOrCreate(new_node);
         }
@@ -129,6 +148,12 @@ namespace bdd {
         // Should only be used with nodes ALREADY in canonical form (outputs of make and ITE)
         // TODO: should I consider the case where complement is the same but A->true == B->false and vice versa
         bool Node::equals_complement(Node* A, Node* B) {
+            if (is_leaf(A) && is_leaf(B) && A != B) {
+                return true;
+            } else if (is_leaf(A) || is_leaf(B)) {
+                return false;
+            }
+
             return (A->root == B->root && A->complemented != B->complemented && A->branch_true == B->branch_true && A->branch_false == B->branch_false);
         }
 

@@ -12,9 +12,8 @@ namespace bdd {
         class Node {
             public:
                 // SeemsGood -- Documented GCC/Clang builtins hack
-                // TODO: to be consistent, shouldn't these be called true_node and false_node?
-                static constexpr Node* true_bdd = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
-                static constexpr Node* false_bdd = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
+                static constexpr Node* true_node = __builtin_constant_p((Node*) 1) ? (Node*) 1 : (Node*) 1;
+                static constexpr Node* false_node = __builtin_constant_p((Node*) 2) ? (Node*) 2 : (Node*) 2;
 
                 // Uniquely identifying BDDs in canonical form
                 bdd::Variable root;
@@ -30,6 +29,9 @@ namespace bdd {
                 static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
                 static Node* ITE(Node* A, Node* B, Node* C);
 
+                // TODO: static inlines?
+                static bool is_leaf(Node* node);
+                static Variable top_variable(Node* A, Node* B, Node* C);
                 // TODO: should any of these be static?
                 static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
                 static Node* complement(Node* node); // Returns pointer to unique node with complemented
