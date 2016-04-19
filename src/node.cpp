@@ -1,5 +1,5 @@
-#include <cassert>
 #include <limits>
+#include <cstdint>
 
 #include "bdd.h"
 
@@ -130,7 +130,7 @@ namespace bdd {
 			//	new_node = make(var, evaluate_at(deref(node).branch_false, var, value), evaluate_at(deref(node).branch_true, var, value));
 			//}
             // Option 2: evaluate recursive case and complement it after
-            Node* new_node = make(var, evaluate_at(deref(node).branch_true var, value), evaluate_at(deref(node).branch_false, var, value));
+            Node* new_node = make(var, evaluate_at(deref(node).branch_true, var, value), evaluate_at(deref(node).branch_false, var, value));
             new_node = is_complemented(node) ? complement(new_node) : new_node;
 
 			// TODO: cache new_node
@@ -143,16 +143,16 @@ namespace bdd {
 
         // Inverts the lowest order bit
         Node* Node::complement(Node* node) {
-            return node ^ 0x1;
+            return (Node*) (((uint64_t) node) ^ 0x1);
         }
 
         bool Node::is_complemented(Node* node) {
-            return node & 0x1;
+            return (((uint64_t) node) & 0x1) == 0x1;
         }
 
         // Sets lowest order bit to 0 and dereferences
         Node Node::deref(Node* node) {
-            return *(node & ~0x1);
+            return *((Node*) (((uint64_t) node) & ~0x1));
         }
 
         // True iff A and B are the same except the lowest order bit
