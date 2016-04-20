@@ -1,12 +1,17 @@
-#include <cassert>
+#include <limits>
+#include <cstdint>
 
 #include "bdd.h"
 
 namespace bdd {
 	namespace internal {
+        static inline bool is_leaf(Node* node);
+        static inline Variable top_variable(Node* A, Node* B, Node* C);
+        static inline Node* pointer(Node* node);
+
 		Node::Node() { }
 
-		Node::Node(bdd::Variable root, bool complemented, Node* branch_true, Node* branch_false) : root(root), complemented(complemented), branch_true(branch_true), branch_false(branch_false) { }
+		Node::Node(bdd::Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
 
 		Node* Node::make(bdd::Variable root, Node* branch_true, Node* branch_false) {
 			if (branch_true == branch_false) {
@@ -14,23 +19,23 @@ namespace bdd {
 			}
 
             // Enforce canonicity (complement only on 1 edge)
-            if (branch_false->complemented) {
+            if (is_complemented(branch_false)) {
                 Node* new_true = complement(branch_true);
                 Node* new_false = complement(branch_false);
-                Node node = Node(root, true, new_true, new_false);
-                return manager::nodes.lookupOrCreate(node);
+                Node node(root, new_true, new_false);
+                return complement(manager::nodes.lookupOrCreate(node));
             }
 
-			Node node = Node(root, false, branch_true, branch_false);
+			Node node(root, branch_true, branch_false);
 			return manager::nodes.lookupOrCreate(node);
 		}
 
 		Node* Node::ITE(Node* A, Node* B, Node* C) {
             // Base cases
-			if (A == true_bdd) { return B; }
-			if (A == false_bdd) { return C; }
-            if (B == true_bdd && C == false_bdd) { return A; }
-            if (B == false_bdd && C == true_bdd) { return complement(A); }
+			if (A == true_node) { return B; }
+			if (A == false_node) { return C; }
+            if (B == true_node && C == false_node) { return A; }
+            if (B == false_node && C == true_node) { return complement(A); }
             if (B == C) { return B; }
 
 			// TODO: check if this ITE has been done before in cache
@@ -41,40 +46,40 @@ namespace bdd {
 
             if (A == B) {
                 // ITE(A,A,C) -> ITE(A,1,C)
-                result = ITE(A, true_bdd, C);
+                result = ITE(A, true_node, C);
             } else if (equals_complement(A, B)) {
                 // ITE(A,!A,C) -> ITE(A,0,C)
-                result = ITE(A, false_bdd, C);
+                result = ITE(A, false_node, C);
             } else if (A == C) {
                 // ITE(A,B,A) -> ITE(A,B,0)
-                result = ITE(A, B, false_bdd);
+                result = ITE(A, B, false_node);
             } else if (equals_complement(A, C)) {
                 // ITE(A,B,!A) -> ITE(A,B,1)
-                result = ITE(A, B, true_bdd);
-            } else if (B == true_bdd && C->root < A->root) {
+                result = ITE(A, B, true_node);
+            } else if (B == true_node && pointer(C)->root < pointer(A)->root) {
                 // ITE(A,1,C) -> ITE(C,1,A) if C < A
-                result = ITE(C, true_bdd, A);
-            } else if (B == false_bdd && C->root < A->root) {
+                result = ITE(C, true_node, A);
+            } else if (B == false_node && pointer(C)->root < pointer(A)->root) {
                 // ITE(A,0,C) -> ITE(!C,0,!A) if C < A
-                result = ITE(complement(C), false_bdd, complement(A));
-            } else if (C == true_bdd && B->root < A->root) {
+                result = ITE(complement(C), false_node, complement(A));
+            } else if (C == true_node && pointer(B)->root < pointer(A)->root) {
                 // ITE(A,B,1) -> ITE(!B,!A,1) if B < A
-                result = ITE(complement(B), complement(A), true_bdd);
-            } else if (C == false_bdd && B->root < A->root) {
+                result = ITE(complement(B), complement(A), true_node);
+            } else if (C == false_node && pointer(B)->root < pointer(A)->root) {
                 // ITE(A,B,0) -> ITE(B,A,0) if B < A
-                result = ITE(B, A, false_bdd);
-            } else if (equals_complement(B, C) && B->root < C->root) {
+                result = ITE(B, A, false_node);
+            } else if (equals_complement(B, C) && pointer(B)->root < pointer(C)->root) {
                 // ITE(A,B,!B) -> ITE(B,A,!A)
                 result = ITE(B, A, complement(A));
-            } else if (A->complemented) {
+            } else if (is_complemented(A)) {
                 // ITE(A,B,C) -> ITE(!A,C,B) if A complemented
                 result = ITE(complement(A), C, B);
-            } else if (B->complemented) {
+            } else if (is_complemented(B)) {
                 // ITE(A,B,C) -> !ITE(A,!B,!C) if B complemented
                 result = complement(ITE(A, complement(B), complement(C)));
             } else {
                 // If no normalization applies
-                bdd::Variable x = std::max(std::max(A->root, B->root), C->root);
+                Variable x = top_variable(A, B, C);
                 Node* A_false = evaluate_at(A, x, false);
                 Node* B_false = evaluate_at(B, x, false);
                 Node* C_false = evaluate_at(C, x, false);
@@ -95,42 +100,69 @@ namespace bdd {
 
 		Node* Node::evaluate_at(Node* node, bdd::Variable var, bool value) {
             // Variable is above this node, nothing changes
-            if (node->root > var) {
+            if (is_leaf(node) || pointer(node)->root > var) {
                 return node;
             }
 
             // Variable is exactly this node, choose appropriate branch
-			if (node->root == var) {
+			if (pointer(node)->root == var) {
                 // Logical XOR
-                return value != node->complemented ? node->branch_true : node->branch_false;
+                return value != is_complemented(node) ? pointer(node)->branch_true : pointer(node)->branch_false;
 			}
 
             // TODO: check cache now
 
             // Variable is below this node, recurse
-			Node* new_node;
-			if (value != node->complemented) { // Logical XOR
-				new_node = make(var, evaluate_at(node->branch_true, var, value), evaluate_at(node->branch_false, var, value));
-			} else {
-				new_node = make(var, evaluate_at(node->branch_false, var, value), evaluate_at(node->branch_true, var, value));
-			}
+            // TODO: are these two different methods equivalent?
+            // Option 1: check complement and do something different depending on whether it is complemented or not
+			//Node* new_node;
+			//if (value != is_complemented(node)) { // Logical XOR
+			//	new_node = make(var, evaluate_at(deref(node).branch_true, var, value), evaluate_at(deref(node).branch_false, var, value));
+			//} else {
+			//	new_node = make(var, evaluate_at(deref(node).branch_false, var, value), evaluate_at(deref(node).branch_true, var, value));
+			//}
+            // Option 2: evaluate recursive case and complement it after
+            Node* new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
+            new_node = is_complemented(node) ? complement(new_node) : new_node;
 
 			// TODO: cache new_node
 
 			return new_node;
 		}
 
-        // TODO: should this be inline?
+        // Inverts the lowest order bit
         Node* Node::complement(Node* node) {
-            Node new_node = Node(node->root, !node->complemented, node->branch_true, node->branch_false);
-            return manager::nodes.lookupOrCreate(new_node);
+            return reinterpret_cast<Node*>(((uint64_t) node) ^ 0x1);
         }
 
-        // Should only be used with nodes ALREADY in canonical form (outputs of make and ITE)
-        // TODO: should I consider the case where complement is the same but A->true == B->false and vice versa
+        bool Node::is_complemented(Node* node) {
+            return (((uint64_t) node) & 0x1) == 0x1;
+        }
+
+        // True iff A and B are the same except the lowest order bit
         bool Node::equals_complement(Node* A, Node* B) {
-            return (A->root == B->root && A->complemented != B->complemented && A->branch_true == B->branch_true && A->branch_false == B->branch_false);
+            return A == complement(B);
         }
 
+
+        //
+        // FILE LOCAL
+        //
+        static inline bool is_leaf(Node* node) {
+            return node == Node::true_node || node == Node::false_node;
+        }
+
+        static inline Variable top_variable(Node* A, Node* B, Node* C) {
+            auto var = [] (Node* x) {
+                return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
+            };
+
+            return std::min(var(A), std::min(var(B), var(C)));
+        }
+
+        // Sets lowest order bit to 0 and dereferences
+        static inline Node* pointer(Node* node) {
+            return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
+        }
 	}
 }
