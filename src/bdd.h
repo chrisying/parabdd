@@ -9,7 +9,7 @@ namespace bdd {
 			Bdd();
 			Bdd(Variable var);
 			Bdd operator&(Bdd& r);
-			Bdd operator+(Bdd& r);
+			Bdd operator|(Bdd& r);
 			Bdd operator^(Bdd& r);
 
 		private:
