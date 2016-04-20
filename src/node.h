@@ -38,6 +38,9 @@ namespace bdd {
 
                 static inline bool is_complemented(Node* node);
                 static inline bool equals_complement(Node* A, Node* B);
+                static inline bool is_leaf(Node* node);
+                static inline Variable top_variable(Node* A, Node* B, Node* C);
+                static inline Node* pointer(Node* node);
         };
     }
 }

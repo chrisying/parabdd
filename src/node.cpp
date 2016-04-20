@@ -5,9 +5,6 @@
 
 namespace bdd {
 	namespace internal {
-        static inline bool is_leaf(Node* node);
-        static inline Variable top_variable(Node* A, Node* B, Node* C);
-        static inline Node* pointer(Node* node);
 
 		Node::Node() { }
 
@@ -144,10 +141,6 @@ namespace bdd {
             return A == complement(B);
         }
 
-
-        //
-        // FILE LOCAL
-        //
         static inline bool is_leaf(Node* node) {
             return node == Node::true_node || node == Node::false_node;
         }

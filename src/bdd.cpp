@@ -47,7 +47,7 @@ namespace bdd {
             return p;
         }
 
-        Node* dnode = internal::pointer(node);
+        internal::Node* dnode = internal::pointer(node);
 
         map[dnode->root] = false;
         if (one_sat_helper(dnode->branch_false)) {
