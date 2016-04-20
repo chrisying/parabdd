@@ -152,7 +152,7 @@ namespace bdd {
 
         // Sets lowest order bit to 0 and dereferences
         Node Node::deref(Node* node) {
-            return *((Node*) (((uint64_t) node) & ~0x1));
+            return *((Node*) (((uint64_t) node) & ((uint64_t) ~0x1)));
         }
 
         // True iff A and B are the same except the lowest order bit
