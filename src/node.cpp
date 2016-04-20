@@ -128,16 +128,16 @@ namespace bdd {
 		}
 
         // Inverts the lowest order bit
-        Node* Node::complement(Node* node) {
+        static inline Node* Node::complement(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) ^ 0x1);
         }
 
-        bool Node::is_complemented(Node* node) {
+        static inline bool Node::is_complemented(Node* node) {
             return (((uint64_t) node) & 0x1) == 0x1;
         }
 
         // True iff A and B are the same except the lowest order bit
-        bool Node::equals_complement(Node* A, Node* B) {
+        static inline bool Node::equals_complement(Node* A, Node* B) {
             return A == complement(B);
         }
 

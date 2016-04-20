@@ -43,14 +43,14 @@ namespace bdd {
     }
 
     bool Bdd::one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool> map) {
-        if (internal::is_leaf(node)) {
+        if (internal::Node::is_leaf(node)) {
             return p;
         }
 
-        internal::Node* dnode = internal::pointer(node);
+        internal::Node* dnode = internal::Node::pointer(node);
 
         map[dnode->root] = false;
-        if (one_sat_helper(dnode->branch_false)) {
+        if (one_sat_helper(dnode->branch_false, p, map)) {
             return 1;
         }
 

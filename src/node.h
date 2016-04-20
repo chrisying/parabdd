@@ -34,7 +34,7 @@ namespace bdd {
                 static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
                 static Node* ITE(Node* A, Node* B, Node* C);
                 static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-                static Node* complement(Node* node); // Returns pointer to unique node with complemented
+                static inline Node* complement(Node* node); // Returns pointer to unique node with complemented
 
                 static inline bool is_complemented(Node* node);
                 static inline bool equals_complement(Node* A, Node* B);
