@@ -16,7 +16,7 @@ namespace bdd {
         return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
     }
 
-	Bdd Bdd::operator+(Bdd& r) {
+	Bdd Bdd::operator|(Bdd& r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, r.node);
 	}
 }
