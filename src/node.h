@@ -36,9 +36,6 @@ namespace bdd {
                 static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
                 static Node* complement(Node* node); // Returns pointer to unique node with complemented
 
-                // TODO: static inlines?
-                // TODO: should any of these be nonstatic?
-
                 static inline bool is_complemented(Node* node);
                 static inline bool equals_complement(Node* A, Node* B);
         };
