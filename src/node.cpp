@@ -141,11 +141,11 @@ namespace bdd {
             return A == complement(B);
         }
 
-        bool is_leaf(Node* node) {
+        bool Node::is_leaf(Node* node) {
             return node == Node::true_node || node == Node::false_node;
         }
 
-        Variable top_variable(Node* A, Node* B, Node* C) {
+        Variable Node::top_variable(Node* A, Node* B, Node* C) {
             auto var = [] (Node* x) {
                 return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
             };
@@ -154,7 +154,7 @@ namespace bdd {
         }
 
         // Sets lowest order bit to 0 and dereferences
-        static inline Node* pointer(Node* node) {
+        static inline Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 	}
