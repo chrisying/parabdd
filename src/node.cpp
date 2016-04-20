@@ -154,7 +154,7 @@ namespace bdd {
         }
 
         // Sets lowest order bit to 0 and dereferences
-        static inline Node* Node::pointer(Node* node) {
+        Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 	}
