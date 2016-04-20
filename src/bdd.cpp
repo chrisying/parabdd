@@ -1,5 +1,6 @@
 #include <cassert>
 #include <limits>
+#include <iostream>
 
 #include "bdd.h"
 
@@ -16,23 +17,23 @@ namespace bdd {
         return Bdd(internal::Node::complement(this->node));
     }
 
-    Bdd Bdd::operator&(Bdd& r) {
+    Bdd Bdd::operator&(Bdd r) {
         return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
     }
 
-	Bdd Bdd::operator|(Bdd& r) {
+	Bdd Bdd::operator|(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, r.node);
 	}
 
-	Bdd Bdd::operator^(Bdd& r) {
+	Bdd Bdd::operator^(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::complement(r.node), r.node);
 	}
 
-	Bdd Bdd::operator>(Bdd& r) {
+	Bdd Bdd::operator>(Bdd r) {
         return internal::Node::ITE(this->node, r.node, internal::Node::true_node);
 	}
 
-	Bdd Bdd::operator<(Bdd& r) {
+	Bdd Bdd::operator<(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, internal::Node::complement(r.node));
 	}
 
@@ -42,23 +43,24 @@ namespace bdd {
         return map;
     }
 
-    bool Bdd::one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool> map) {
+    bool Bdd::one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map) {
+        std::cout << "Called one_sat with " << node << ", " << p << std::endl;
         if (internal::Node::is_leaf(node)) {
-            return p;
+            return !p;
         }
 
         internal::Node* dnode = internal::Node::pointer(node);
 
         map[dnode->root] = false;
         if (one_sat_helper(dnode->branch_false, p, map)) {
-            return 1;
+            return true;
         }
 
         map[dnode->root] = true;
         if (internal::Node::is_complemented(dnode->branch_true)) {
             p = !p;
         }
-
+        
         return one_sat_helper(dnode->branch_true, p, map);
     }
 }
