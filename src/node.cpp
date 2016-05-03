@@ -5,15 +5,12 @@
 
 namespace bdd {
 	namespace internal {
-        static inline bool is_leaf(Node* node);
-        static inline Variable top_variable(Node* A, Node* B, Node* C);
-        static inline Node* pointer(Node* node);
 
 		Node::Node() { }
 
-		Node::Node(bdd::Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
+		Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
 
-		Node* Node::make(bdd::Variable root, Node* branch_true, Node* branch_false) {
+		Node* Node::make(Variable root, Node* branch_true, Node* branch_false) {
 			if (branch_true == branch_false) {
 				return branch_false;
 			}
@@ -98,7 +95,7 @@ namespace bdd {
 			return result;
 		}
 
-		Node* Node::evaluate_at(Node* node, bdd::Variable var, bool value) {
+		Node* Node::evaluate_at(Node* node, Variable var, bool value) {
             // Variable is above this node, nothing changes
             if (is_leaf(node) || pointer(node)->root > var) {
                 return node;
@@ -144,15 +141,11 @@ namespace bdd {
             return A == complement(B);
         }
 
-
-        //
-        // FILE LOCAL
-        //
-        static inline bool is_leaf(Node* node) {
+        bool Node::is_leaf(Node* node) {
             return node == Node::true_node || node == Node::false_node;
         }
 
-        static inline Variable top_variable(Node* A, Node* B, Node* C) {
+        Variable Node::top_variable(Node* A, Node* B, Node* C) {
             auto var = [] (Node* x) {
                 return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
             };
@@ -161,7 +154,7 @@ namespace bdd {
         }
 
         // Sets lowest order bit to 0 and dereferences
-        static inline Node* pointer(Node* node) {
+        Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 	}
