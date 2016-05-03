@@ -49,7 +49,7 @@ namespace bdd {
     }
 
     bool Bdd::one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map) {
-        std::cout << "Called one_sat with " << node << ", " << p << std::endl;
+        //std::cout << "Called one_sat with " << node << ", " << p << std::endl;
         if (internal::Node::is_leaf(node)) {
             return !p;
         }

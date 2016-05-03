@@ -25,5 +25,13 @@ int main() {
     map = c3.one_sat();
     assert(map[1] && !map[2]);
 
+    Bdd d(1);
+    Bdd c(2);
+    Bdd e(3);
+    Bdd f(4);
+    Bdd g1 = (d | c) & (e | f);
+    map = g1.one_sat();
+    assert((map[1] || map[2]) && (map[3] || map[4]));
+
 	return 0;
 }
