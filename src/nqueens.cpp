@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <set>
 #include <unordered_map>
+#include <iostream>
 
 #include "bdd.h"
 
@@ -40,7 +41,7 @@ Bdd queen;            /* N-queen problem express as a BDD */
 
 /* Build the requirements for all other fields than (i,j) assuming
    that (i,j) has a queen */
-void build(int i, int j)
+static void build(int i, int j)
 {
     Bdd a(true);
     Bdd b(true);
@@ -108,7 +109,7 @@ int main(int ac, char **av)
 
     for (i=0 ; i<N ; i++)
         for (j=0 ; j<N ; j++)
-            X[i][j] = Bdd(i*N+j);
+            X[i][j] = Bdd((Variable)(i*N+j));
 
     /* Place a queen in each row */
     for (i=0 ; i<N ; i++)
@@ -130,7 +131,7 @@ int main(int ac, char **av)
     /* Print the results */
     set<Variable> vars;
     for (i = 0; i < N * N; i++)
-        vars.insert(i);
+        vars.insert((unsigned int)i);
     cout << "There are " << queen.count_sat(vars) << " solutions\n";
     cout << "one is:\n";
 
