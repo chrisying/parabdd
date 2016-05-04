@@ -76,7 +76,7 @@ namespace bdd {
      **/
 
     int Bdd::count_sat(std::set<Variable> vars) {
-        int n = vars.length;
+        int n = vars.size();
         int pow2 = pow(2, n);
         int count = count_sat_helper(this->node, n, vars);
 
@@ -106,13 +106,13 @@ namespace bdd {
         // TODO: check cache now
 
         internal::Node* dnode = internal::Node::pointer(node);
-        if (set.find(dnode->root) == set.end()) {
+        if (vars.find(dnode->root) == vars.end()) {
             return -1;
         }
 
         // TODO: this can be done in parallel
-        int countT = pow2 - count_sat_helper(dnode->branch_true, n);
-        int countF = pow2 - count_sat_helper(dnode->branch_false, n);
+        int countT = pow2 - count_sat_helper(dnode->branch_true, n, vars);
+        int countF = pow2 - count_sat_helper(dnode->branch_false, n, vars);
 
         if (countT == -1 || countF == -1) {
             return -1; // TODO: should -1 be cached?
