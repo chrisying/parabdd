@@ -137,6 +137,12 @@ int main(int ac, char **av)
 
     //unordered_map<Variable, bool> map = queen.one_sat();
     //cout << map << endl;
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            cout << map[i*N + j] << " ";
+        }
+        cout << endl;
+    }
 
     return 0;
 }
