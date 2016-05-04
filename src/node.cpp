@@ -159,7 +159,7 @@ namespace bdd {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 
-        static void Node::print_node(Node* node) {
+        void Node::print_node(Node* node) {
             Node* dnode = pointer(node);
             std::cout << "[Variable: " << dnode->root << ", Comp: ";
             if (is_complemented(node)) {
