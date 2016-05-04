@@ -157,5 +157,22 @@ namespace bdd {
         Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
+
+        static void Node::print_node(Node* node) {
+            Node* dnode = pointer(node);
+            std::cout << "[Variable: " << dnode->root << ", Comp: ";
+            if (is_complemented(this->node)) {
+                std::cout << "yes] {" << std::endl;
+            } else {
+                std::cout << "no] {" << std:endl;
+            }
+
+            std::cout << "True branch (Variable " << dnode->root << "): ";
+            print_node(dnode->branch_true);
+            std::cout << "False branch (Variable " << dnode->root << "): ";
+            print_node(dnode->branch_false);
+
+            std::cout << "} #end Variable " << dnode->root << std::endl;
+        }
 	}
 }

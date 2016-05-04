@@ -34,13 +34,16 @@ namespace bdd {
                 static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
                 static Node* ITE(Node* A, Node* B, Node* C);
                 static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-                static Node* complement(Node* node); // Returns pointer to unique node with complemented
+                static Node* complement(Node* node);
 
                 static bool is_complemented(Node* node);
                 static bool equals_complement(Node* A, Node* B);
                 static bool is_leaf(Node* node);
                 static Variable top_variable(Node* A, Node* B, Node* C);
                 static Node* pointer(Node* node);
+
+                // For debug purposes, will do a full traversal of the tree
+                void print_node();
         };
     }
 }
