@@ -165,7 +165,7 @@ namespace bdd {
             if (is_complemented(node)) {
                 std::cout << "yes] {" << std::endl;
             } else {
-                std::cout << "no] {" << std:endl;
+                std::cout << "no] {" << std::endl;
             }
 
             std::cout << "True branch (Variable " << dnode->root << "): ";
