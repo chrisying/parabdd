@@ -178,9 +178,9 @@ namespace bdd {
             }
 
             std::cout << std::string(indents+1, '\t') << "True branch (Variable " << dnode->root << "): ";
-            print_node(dnode->branch_true);
+            print_node(dnode->branch_true, indents + 1);
             std::cout << std::string(indents+1, '\t') << "False branch (Variable " << dnode->root << "): ";
-            print_node(dnode->branch_false);
+            print_node(dnode->branch_false, indents + 1);
 
             std::cout << std::string(indents, '\t') << "} #end Variable " << dnode->root << std::endl;
         }
