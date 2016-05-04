@@ -162,27 +162,27 @@ namespace bdd {
 
         void Node::print_node(Node* node, int indents) {
             if (node == Node::true_node) {
-                std::cout << std::string(indents, '\t') << "TRUE" << std::endl;
+                std::cout << "TRUE" << std::endl;
                 return;
             } else if (node == Node::false_node) {
-                std::cout << std::string(indents, '\t') << "FALSE" << std::endl;
+                std::cout << "FALSE" << std::endl;
                 return;
             }
 
             Node* dnode = pointer(node);
-            std::cout << std::string(indents, '\t') << "[Variable: " << dnode->root << ", Comp: ";
+            std::cout << "[Variable: " << dnode->root << ", Comp: ";
             if (is_complemented(node)) {
                 std::cout << "yes] {" << std::endl;
             } else {
                 std::cout << "no] {" << std::endl;
             }
 
-            std::cout << std::string(indents+1, '\t') << "True branch (Variable " << dnode->root << "): ";
+            std::cout << std::string(indents+1, ' ') << "True branch (Variable " << dnode->root << "): ";
             print_node(dnode->branch_true, indents + 1);
-            std::cout << std::string(indents+1, '\t') << "False branch (Variable " << dnode->root << "): ";
+            std::cout << std::string(indents+1, ' ') << "False branch (Variable " << dnode->root << "): ";
             print_node(dnode->branch_false, indents + 1);
 
-            std::cout << std::string(indents, '\t') << "} #end Variable " << dnode->root << std::endl;
+            std::cout << std::string(indents, ' ') << "} #end Variable " << dnode->root << std::endl;
         }
 	}
 }
