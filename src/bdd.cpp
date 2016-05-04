@@ -34,21 +34,46 @@ namespace bdd {
         return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
     }
 
+    Bdd Bdd::operator&=(Bdd r) {
+        *this = *this & r;
+        return *this;
+    }
+
 	Bdd Bdd::operator|(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, r.node);
 	}
+
+    Bdd Bdd::operator|=(Bdd r) {
+        *this = *this | r;
+        return *this;
+    }
 
 	Bdd Bdd::operator^(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::complement(r.node), r.node);
 	}
 
+    Bdd Bdd::operator^=(Bdd r) {
+        *this = *this ^ r;
+        return *this;
+    }
+
 	Bdd Bdd::operator>(Bdd r) {
         return internal::Node::ITE(this->node, r.node, internal::Node::true_node);
 	}
 
+    Bdd Bdd::operator>=(Bdd r) {
+        *this = *this > r;
+        return *this;
+    }
+
 	Bdd Bdd::operator<(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, internal::Node::complement(r.node));
 	}
+
+    Bdd Bdd::operator<=(Bdd r) {
+        *this = *this < r;
+        return *this;
+    }
 
     /**
      * One SAT
