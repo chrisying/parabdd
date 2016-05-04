@@ -5,8 +5,12 @@
 
 namespace bdd {
     namespace internal {
+        bool NodeSet::init(size_t mem_usage) {
+            size_t num_nodes = mem_usage / sizeof(Node);
+            printf("%lu nodes\n", num_nodes);
 
-        NodeSet::NodeSet(size_t num_elems) {
+            table = (Node*) calloc(num_nodes, sizeof(Node));
+            return true;
         }
 
         Node* NodeSet::lookupOrCreate(const Node& node) {

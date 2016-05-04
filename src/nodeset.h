@@ -12,11 +12,12 @@ namespace bdd {
         class NodeSet {
             public:
                 Node* lookupOrCreate(const Node& value);
-                NodeSet(size_t num_elems);
+                bool init(size_t mem_usage);
 
             private:
                 // Single-threaded implementation
                 std::list<Node*> _set;
+                Node* table;
         };
     }
 }
