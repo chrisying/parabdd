@@ -14,6 +14,14 @@ namespace bdd {
         node = internal::Node::make(var, internal::Node::true_node, internal::Node::false_node);
     }
 
+    Bdd::Bdd(bool b) {
+        if (b) {
+            node = internal::Node::true_node;
+        } else {
+            node = internal::Node::false_node;
+        }
+    }
+
     Bdd::Bdd(internal::Node* node) : node(node) { }
 
     Bdd Bdd::operator!() {
