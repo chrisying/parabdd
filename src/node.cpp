@@ -1,5 +1,6 @@
 #include <limits>
 #include <cstdint>
+#include <iostream>
 
 #include "bdd.h"
 
@@ -153,9 +154,26 @@ namespace bdd {
             return std::min(var(A), std::min(var(B), var(C)));
         }
 
-        // Sets lowest order bit to 0 and dereferences
+        // Sets lowest order bit to 0
         Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
+        }
+
+        void Node::print_node(Node* node) {
+            Node* dnode = pointer(node);
+            std::cout << "[Variable: " << dnode->root << ", Comp: ";
+            if (is_complemented(node)) {
+                std::cout << "yes] {" << std::endl;
+            } else {
+                std::cout << "no] {" << std::endl;
+            }
+
+            std::cout << "True branch (Variable " << dnode->root << "): ";
+            print_node(dnode->branch_true);
+            std::cout << "False branch (Variable " << dnode->root << "): ";
+            print_node(dnode->branch_false);
+
+            std::cout << "} #end Variable " << dnode->root << std::endl;
         }
 	}
 }

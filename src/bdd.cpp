@@ -2,6 +2,8 @@
 #include <limits>
 #include <iostream>
 #include <cmath>
+#include <atomic>
+#include <set>
 
 #include "bdd.h"
 
@@ -19,7 +21,9 @@ namespace bdd {
     }
 
     Bdd Bdd::operator&(Bdd r) {
-        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
+        Bdd temp = Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
+        internal::Node::print_node(temp.node);
+        return temp;
     }
 
 	Bdd Bdd::operator|(Bdd r) {
@@ -70,35 +74,54 @@ namespace bdd {
     }
 
     /**
-     * One SAT
+     * Count SAT
      **/
 
-    int Bdd::count_sat() {
-        // TODO: write this after we augment number of variables
-        // ISSUE: if we don't use a variable in a BDD, even if we want to
-        // count it (ex: T/F doesn't matter but it should still be counted
-        // as a var), it won't be counted.
-        return 0;
+    int Bdd::count_sat(std::set<Variable> vars) {
+        int n = vars.size();
+        int pow2 = pow(2, n);
+        int count = count_sat_helper(this->node, n, vars);
+
+        if (count == -1) {
+            std::cout << "A variable in the BDD was not declared in vars" << std::endl;
+            return -1;
+        }
+
+        if (internal::Node::is_complemented(this->node)) {
+            count = pow2 - count;
+        }
+
+        return count;
     }
 
     // TODO: I think there is a better way to implement this. The invariant
     // should be that count_sat_helper will return the exact number of SAT
     // assignments. We should do the negations at the base case and right
     // before adding to cache.
-    int Bdd::count_sat_helper(internal::Node* node, int n) {
+    int Bdd::count_sat_helper(internal::Node* node, int n, std::set<Variable> vars) {
         // TODO: handle overflow
+        int pow2 = pow(2, n);
         if (internal::Node::is_leaf(node)) {
-            return pow(2, n);
+            return pow2;
         }
 
         // TODO: check cache now
 
         internal::Node* dnode = internal::Node::pointer(node);
-        int countT = count_sat_helper(dnode->branch_true, n);
-        int countF = count_sat_helper(dnode->branch_false, n);
+        if (vars.find(dnode->root) == vars.end()) {
+            return -1;
+        }
 
-        if (internal::Node::is_complemented(dnode->branch_true)) {
-            countF = pow(2, n) - countF;
+        // TODO: this can be done in parallel
+        int countT = count_sat_helper(dnode->branch_true, n, vars);
+        int countF = pow2 - count_sat_helper(dnode->branch_false, n, vars);
+
+        if (countT == -1 || countF == -1) {
+            return -1; // TODO: should -1 be cached?
+        }
+
+        if (!internal::Node::is_complemented(dnode->branch_true)) {
+            countT = pow2 - countT;
         }
 
         int count = (countT + countF) / 2;
