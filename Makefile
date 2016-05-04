@@ -9,11 +9,11 @@ OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
 
 all: parabdd nqueens
 
-parabdd: $(OBJECTS) parabdd.cpp
-	$(CC) $(CFLAGS) $(OBJECTS) parabdd.cpp  -o parabdd
+parabdd: $(OBJECTS) src/parabdd.cpp
+	$(CC) $(CFLAGS) $(OBJECTS) src/parabdd.cpp  -o parabdd
 
-nqueens: $(OBJECTS) nqueens.cpp
-	$(CC) $(CFLAGS) $(OBJECTS) nqueens.cpp -o nqueens
+nqueens: $(OBJECTS) src/nqueens.cpp
+	$(CC) $(CFLAGS) $(OBJECTS) src/nqueens.cpp -o nqueens
 
 bin/%.o: src/%.cpp src/bdd.h src/bdd_internal.h
 	$(CC) $(CFLAGS) -c $< -o $@

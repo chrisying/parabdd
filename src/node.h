@@ -46,8 +46,8 @@ namespace bdd {
                 static Variable top_variable(Node* A, Node* B, Node* C);
                 static Node* pointer(Node* node);
 
-                // For debug purposes, will do a full traversal of the tree
-                static void print_node(Node* node, int indents);
+                // For debug purposes, will print a full graph of the tree
+                static void print(Node* node);
         };
     }
 }

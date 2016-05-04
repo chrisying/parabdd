@@ -30,7 +30,12 @@ int main() {
     Bdd c(2);
     Bdd e(3);
     Bdd f(4);
-    Bdd g1 = (d | c) & (e | f);
+    Bdd g(5);
+    Bdd h(6);
+    Bdd i(7);
+    Bdd j(8);
+    Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
+    g1.print();
     map = g1.one_sat();
     assert((map[1] || map[2]) && (map[3] || map[4]));
 

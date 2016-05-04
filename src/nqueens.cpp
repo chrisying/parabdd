@@ -43,10 +43,7 @@ Bdd queen;            /* N-queen problem express as a BDD */
    that (i,j) has a queen */
 static void build(int i, int j)
 {
-    Bdd a(true);
-    Bdd b(true);
-    Bdd c(true);
-    Bdd d(true);
+    Bdd a = bdd_true, b = bdd_true, c = bdd_true, d = bdd_true;
     int k,l;
 
     /* No one in the same column */
@@ -100,7 +97,7 @@ int main(int ac, char **av)
     }
 
     /* Initialize with 100000 nodes, 10000 cache entries and NxN variables */
-    queen = new Bdd(true);
+    queen = bdd_true;
 
     /* Build variable array */
     X = new Bdd*[N];
@@ -114,7 +111,7 @@ int main(int ac, char **av)
     /* Place a queen in each row */
     for (i=0 ; i<N ; i++)
     {
-        Bdd e(false);
+        Bdd e = bdd_false;
         for (j=0 ; j<N ; j++)
             e = e | X[i][j];
         queen = queen & e;
