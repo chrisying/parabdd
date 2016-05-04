@@ -135,7 +135,7 @@ int main(int ac, char **av)
     cout << "There are " << queen.count_sat(vars) << " solutions\n";
     cout << "one is:\n";
 
-    //unordered_map<Variable, bool> map = queen.one_sat();
+    unordered_map<Variable, bool> map = queen.one_sat();
     //cout << map << endl;
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
