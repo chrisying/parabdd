@@ -51,12 +51,12 @@ void build(int i, int j)
     /* No one in the same column */
     for (l=0 ; l<N ; l++)
         if (l != j)
-            a &= X[i][j] > !X[i][l];
+            a = a & (X[i][j] > !X[i][l]);
 
     /* No one in the same row */
     for (k=0 ; k<N ; k++)
         if (k != i)
-            b &= X[i][j] > !X[k][j];
+            b = b & (X[i][j] > !X[k][j]);
 
     /* No one in the same up-right diagonal */
     for (k=0 ; k<N ; k++)
@@ -64,7 +64,7 @@ void build(int i, int j)
         int ll = k-i+j;
         if (ll>=0 && ll<N)
             if (k != i)
-                c &= X[i][j] > !X[k][ll];
+                c = c & (X[i][j] > !X[k][ll]);
     }
 
     /* No one in the same down-right diagonal */
@@ -73,10 +73,10 @@ void build(int i, int j)
         int ll = i+j-k;
         if (ll>=0 && ll<N)
             if (k != i)
-                d &= X[i][j] > !X[k][ll];
+                d = d & (X[i][j] > !X[k][ll]);
     }
 
-    queen &= a & b & c & d;
+    queen = queen & (a & b & c & d);
 }
 
 
@@ -115,8 +115,8 @@ int main(int ac, char **av)
     {
         Bdd e(false);
         for (j=0 ; j<N ; j++)
-            e |= X[i][j];
-        queen &= e;
+            e = e | X[i][j];
+        queen = queen & e;
     }
 
     /* Build requirements for each variable(field) */
