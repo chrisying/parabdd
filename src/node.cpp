@@ -153,7 +153,7 @@ namespace bdd {
             return std::min(var(A), std::min(var(B), var(C)));
         }
 
-        // Sets lowest order bit to 0 and dereferences
+        // Sets lowest order bit to 0
         Node* Node::pointer(Node* node) {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }

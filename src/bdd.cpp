@@ -2,6 +2,7 @@
 #include <limits>
 #include <iostream>
 #include <cmath>
+#include <atomic>
 
 #include "bdd.h"
 
@@ -70,35 +71,60 @@ namespace bdd {
     }
 
     /**
-     * One SAT
+     * Count SAT
      **/
 
-    int Bdd::count_sat() {
-        // TODO: write this after we augment number of variables
-        // ISSUE: if we don't use a variable in a BDD, even if we want to
-        // count it (ex: T/F doesn't matter but it should still be counted
-        // as a var), it won't be counted.
-        return 0;
+    int Bdd::count_sat(std::vector<Variable> vars) {
+        std::unordered_map<Variable, std::atomic<bool>*> map;
+        std::atomic<bool>* used = new std::atomic<bool>[vars.length()];
+        for (auto const& v : vars) {
+            map[v] = used++;
+        }
+
+        int n = vars.length();
+        int pow2 = pow(2, n);
+        int count = count_sat_helper(this->node, n, map, used);
+
+        if (count == -1) {
+            std::cout << "A variable in the BDD was not declared in vars" << std::endl;
+            return -1;
+        }
+
+        if (internal::Node::is_complemented(this->node)) {
+            count = pow2 - count;
+        }
+
+        return count;
     }
 
     // TODO: I think there is a better way to implement this. The invariant
     // should be that count_sat_helper will return the exact number of SAT
     // assignments. We should do the negations at the base case and right
     // before adding to cache.
-    int Bdd::count_sat_helper(internal::Node* node, int n) {
+    int Bdd::count_sat_helper(internal::Node* node, int n, std::unordered_map<Variable, std::atomic<bool>*> map, std::atomic<bool>* used) {
         // TODO: handle overflow
+        int pow2 = pow(2, n);
         if (internal::Node::is_leaf(node)) {
-            return pow(2, n);
+            return pow2;
         }
 
         // TODO: check cache now
 
         internal::Node* dnode = internal::Node::pointer(node);
-        int countT = count_sat_helper(dnode->branch_true, n);
-        int countF = count_sat_helper(dnode->branch_false, n);
+        if (map.find(dnode->root) == map.end()) {
+            return -1;
+        }
+
+        // TODO: this can be done in parallel
+        int countT = pow2 - count_sat_helper(dnode->branch_true, n);
+        int countF = pow2 - count_sat_helper(dnode->branch_false, n);
+
+        if (countT == -1 || countF == -1) {
+            return -1; // TODO: should -1 be cached?
+        }
 
         if (internal::Node::is_complemented(dnode->branch_true)) {
-            countF = pow(2, n) - countF;
+            countF = pow2 - countF;
         }
 
         int count = (countT + countF) / 2;

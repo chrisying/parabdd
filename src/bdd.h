@@ -2,6 +2,7 @@
 #define _BDD_H_
 
 #include <unordered_map>
+#include <vector>
 
 #include "bdd_internal.h"
 
@@ -10,7 +11,7 @@ namespace bdd {
 		public:
 			Bdd();
 			Bdd(Variable var);
-            Bdd operator!();       // NOT
+            Bdd operator!();      // NOT
 			Bdd operator&(Bdd r); // AND
 			Bdd operator|(Bdd r); // OR
 			Bdd operator^(Bdd r); // XOR
@@ -18,7 +19,7 @@ namespace bdd {
             Bdd operator<(Bdd r); // REVERSE IMPLIES
 
             std::unordered_map<Variable, bool> one_sat();
-            int count_sat();
+            int count_sat(std::vector<Variable> vars);
 
 		private:
             Bdd(internal::Node* node);
