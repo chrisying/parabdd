@@ -59,8 +59,11 @@ int main() {
     map = a.one_sat();
     assert(map[1] && map[2]);
     assert(a.count_sat(c1v) == 1);
-    dd = d & c;
-    assert (a == dd);
+    Bdd dd = d & c;
+    std::cout << "This: " << std::endl;
+    a.print();
+    std::cout << "Should match this: " << std::endl;
+    dd.print();
 
     std::cout << "All tests passed" << std::endl;
 
