@@ -8,6 +8,9 @@
 #include "bdd.h"
 
 namespace bdd {
+    Bdd Bdd::bdd_true(internal::Node::true_node);
+    Bdd Bdd::bdd_false(internal::Node::false_node);
+
 	Bdd::Bdd() : node(nullptr) { }
 
     Bdd::Bdd(Variable var) {

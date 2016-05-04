@@ -23,8 +23,8 @@ namespace bdd {
             Bdd operator<(Bdd r); // REVERSE IMPLIES
             Bdd operator<=(Bdd r);
 
-            static Bdd bdd_true(internal::Node::true_node);
-            static Bdd bdd_false(internal::Node::false_node);
+            static Bdd bdd_true;
+            static Bdd bdd_false;
 
             std::unordered_map<Variable, bool> one_sat();
             int count_sat(std::set<Variable> vars);
