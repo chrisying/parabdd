@@ -111,14 +111,14 @@ namespace bdd {
         }
 
         // TODO: this can be done in parallel
-        int countT = pow2 - count_sat_helper(dnode->branch_true, n, vars);
+        int countT = count_sat_helper(dnode->branch_true, n, vars);
         int countF = pow2 - count_sat_helper(dnode->branch_false, n, vars);
 
         if (countT == -1 || countF == -1) {
             return -1; // TODO: should -1 be cached?
         }
 
-        if (internal::Node::is_complemented(dnode->branch_true)) {
+        if (!internal::Node::is_complemented(dnode->branch_true)) {
             countT = pow2 - countT;
         }
 
