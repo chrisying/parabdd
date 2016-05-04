@@ -55,6 +55,11 @@ int main() {
     int cc3 = c3.count_sat(c3v);
     assert(cc3 == 1);
 
+    a &= b;
+    map = a.one_sat();
+    assert(map[1] && map[2]);
+    assert(a.count_sat(c1v) == 1);
+
     std::cout << "All tests passed" << std::endl;
 
 	return 0;
