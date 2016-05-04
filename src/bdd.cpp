@@ -119,7 +119,7 @@ namespace bdd {
         }
 
         if (internal::Node::is_complemented(dnode->branch_true)) {
-            countF = pow2 - countF;
+            countT = pow2 - countT;
         }
 
         int count = (countT + countF) / 2;
