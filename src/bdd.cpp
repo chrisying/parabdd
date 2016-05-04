@@ -14,14 +14,6 @@ namespace bdd {
         node = internal::Node::make(var, internal::Node::true_node, internal::Node::false_node);
     }
 
-    Bdd::Bdd(bool b) {
-        if (b) {
-            node = internal::Node::true_node;
-        } else {
-            node = internal::Node::false_node;
-        }
-    }
-
     Bdd::Bdd(internal::Node* node) : node(node) { }
 
     Bdd Bdd::operator!() {
@@ -49,6 +41,10 @@ namespace bdd {
 	Bdd Bdd::operator<(Bdd r) {
         return internal::Node::ITE(this->node, internal::Node::true_node, internal::Node::complement(r.node));
 	}
+
+    void Bdd::print() {
+        internal::Node::print(this->node);
+    }
 
     /**
      * One SAT

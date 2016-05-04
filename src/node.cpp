@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <set>
 
 #include "bdd.h"
 
@@ -160,29 +161,37 @@ namespace bdd {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 
-        static void print_rec(Node* node) {
-            if (node == Node::true_node) {
+        static uintptr_t qp(Node* n) {
+            return reinterpret_cast<uintptr_t>(n);
+        }
+
+        static void print_rec(Node* node, std::set<Node*>& visited) {
+            if (visited.count(node)) {
                 return;
-            } else if (node == Node::false_node) {
+            }
+            if (Node::is_leaf(node)) {
                 return;
             }
 
-            uintptr_t r = reinterpret_cast<uintptr_t>(node);
+            std::cout << qp(node) << " [label=\"" << node->root << "\"];\n";
 
-            std::cout << r << " [label=\"" << Node::pointer(node)->root << "\"];\n";
+            std::cout << qp(node) << " -> " << qp(Node::pointer(node->branch_false)) << " [style=dashed];\n";
+            std::cout << qp(node) << " -> " << qp(Node::pointer(node->branch_true)) << " [style=filled]" << (Node::is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
 
-            std::cout << r << " -> " << Node::pointer(node)->branch_false << " [style=dotted];\n";
-            std::cout << r << " -> " << Node::pointer(node)->branch_true << " [style=filled];\n";
+            visited.insert(node);
+
+            print_rec(Node::pointer(node->branch_true), visited);
+            print_rec(Node::pointer(node->branch_false), visited);
         }
 
-        void Node::print_node(Node* node) {
+        void Node::print(Node* node) {
             std::cout << "digraph G {\n";
-            std::cout << "2 [shape=box, label=\"false\", style=filled, shape=box, height=0.3, width=0.3];\n";
-            std::cout << "3 [shape=box, label=\"true\", style=filled, shape=box, height=0.3, width=0.3];\n";
+            std::cout << qp(Node::false_node) << " [shape=box, label=\"false\", style=filled, shape=box, height=0.3, width=0.3];\n";
 
-            print_rec(node);
+            std::set<Node*> visited;
+            print_rec(Node::pointer(node), visited);
 
-            std::cout << "}";
+            std::cout << "}\n";
         }
     }
 }
