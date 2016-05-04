@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <atomic>
+#include <set>
 
 #include "bdd.h"
 
@@ -74,16 +75,10 @@ namespace bdd {
      * Count SAT
      **/
 
-    int Bdd::count_sat(std::vector<Variable> vars) {
-        std::unordered_map<Variable, std::atomic<bool>*> map;
-        std::atomic<bool>* used = new std::atomic<bool>[vars.length()];
-        for (auto const& v : vars) {
-            map[v] = used++;
-        }
-
-        int n = vars.length();
+    int Bdd::count_sat(std::set<Variable> vars) {
+        int n = vars.length;
         int pow2 = pow(2, n);
-        int count = count_sat_helper(this->node, n, map, used);
+        int count = count_sat_helper(this->node, n, vars);
 
         if (count == -1) {
             std::cout << "A variable in the BDD was not declared in vars" << std::endl;
@@ -101,7 +96,7 @@ namespace bdd {
     // should be that count_sat_helper will return the exact number of SAT
     // assignments. We should do the negations at the base case and right
     // before adding to cache.
-    int Bdd::count_sat_helper(internal::Node* node, int n, std::unordered_map<Variable, std::atomic<bool>*> map, std::atomic<bool>* used) {
+    int Bdd::count_sat_helper(internal::Node* node, int n, std::set<Variable> vars) {
         // TODO: handle overflow
         int pow2 = pow(2, n);
         if (internal::Node::is_leaf(node)) {
@@ -111,7 +106,7 @@ namespace bdd {
         // TODO: check cache now
 
         internal::Node* dnode = internal::Node::pointer(node);
-        if (map.find(dnode->root) == map.end()) {
+        if (set.find(dnode->root) == set.end()) {
             return -1;
         }
 
