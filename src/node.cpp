@@ -160,6 +160,14 @@ namespace bdd {
         }
 
         void Node::print_node(Node* node) {
+            if (node == Node::true_node) {
+                std::cout << "TRUE" << std::endl;
+                return;
+            } else if {
+                std::cout << "FALSE" << std::endl;
+                return;
+            }
+
             Node* dnode = pointer(node);
             std::cout << "[Variable: " << dnode->root << ", Comp: ";
             if (is_complemented(node)) {
