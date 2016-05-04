@@ -68,6 +68,7 @@ namespace bdd {
     Bdd Bdd::operator<=(Bdd r) {
         *this = *this < r;
         return *this;
+    }
 
     void Bdd::print() {
         internal::Node::print(this->node);
