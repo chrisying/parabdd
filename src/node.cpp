@@ -1,6 +1,7 @@
 #include <limits>
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 #include "bdd.h"
 
@@ -159,29 +160,29 @@ namespace bdd {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 
-        void Node::print_node(Node* node) {
+        void Node::print_node(Node* node, int indents) {
             if (node == Node::true_node) {
-                std::cout << "TRUE" << std::endl;
+                std::cout << std::string(indents, '\t') << "TRUE" << std::endl;
                 return;
             } else if (node == Node::false_node) {
-                std::cout << "FALSE" << std::endl;
+                std::cout << std::string(indents, '\t') << "FALSE" << std::endl;
                 return;
             }
 
             Node* dnode = pointer(node);
-            std::cout << "[Variable: " << dnode->root << ", Comp: ";
+            std::cout << std::string(indents, '\t') << "[Variable: " << dnode->root << ", Comp: ";
             if (is_complemented(node)) {
                 std::cout << "yes] {" << std::endl;
             } else {
                 std::cout << "no] {" << std::endl;
             }
 
-            std::cout << "True branch (Variable " << dnode->root << "): ";
+            std::cout << std::string(indents+1, '\t') << "True branch (Variable " << dnode->root << "): ";
             print_node(dnode->branch_true);
-            std::cout << "False branch (Variable " << dnode->root << "): ";
+            std::cout << std::string(indents+1, '\t') << "False branch (Variable " << dnode->root << "): ";
             print_node(dnode->branch_false);
 
-            std::cout << "} #end Variable " << dnode->root << std::endl;
+            std::cout << std::string(indents, '\t') << "} #end Variable " << dnode->root << std::endl;
         }
 	}
 }
