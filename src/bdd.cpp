@@ -29,9 +29,9 @@ namespace bdd {
     }
 
     Bdd Bdd::operator&(Bdd r) {
-        Bdd temp = Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
-        internal::Node::print_node(temp.node, 0);
-        return temp;
+        //Bdd temp = Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
+        //internal::Node::print_node(temp.node, 0);
+        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
     }
 
 	Bdd Bdd::operator|(Bdd r) {
