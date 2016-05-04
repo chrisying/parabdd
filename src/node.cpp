@@ -1,5 +1,6 @@
 #include <limits>
 #include <cstdint>
+#include <iostream>
 
 #include "bdd.h"
 
@@ -161,7 +162,7 @@ namespace bdd {
         static void Node::print_node(Node* node) {
             Node* dnode = pointer(node);
             std::cout << "[Variable: " << dnode->root << ", Comp: ";
-            if (is_complemented(this->node)) {
+            if (is_complemented(node)) {
                 std::cout << "yes] {" << std::endl;
             } else {
                 std::cout << "no] {" << std:endl;
