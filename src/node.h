@@ -47,7 +47,7 @@ namespace bdd {
                 static Node* pointer(Node* node);
 
                 // For debug purposes, will do a full traversal of the tree
-                static void print_node(Node* node);
+                static void print_node(Node* node, int indents);
         };
     }
 }
