@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <limits>
 
 namespace bdd {
     // Public: the type of a BDD variable
@@ -16,9 +17,12 @@ namespace bdd {
                 // SeemsGood -- Documented GCC/Clang builtins hack
                 static constexpr Node* true_node = __builtin_constant_p((Node*) 1) ? (Node*) 3 : (Node*) 3;  // 3 == 0b11 == compl(0b10) == compl(2)
                 static constexpr Node* false_node = __builtin_constant_p((Node*) 0) ? (Node*) 2 : (Node*) 2;
+                // Special reference count values to mean unused or freed
+                static constexpr uint32_t unused = std::numeric_limits<uint32_t>::max();
+                static constexpr uint32_t freed = 0;
 
-                // A reference count for freeing temporary BDDs
-                std::atomic<uint32_t> reference_count;
+                // A reference count for freeing temporary BDDs.
+                uint32_t reference_count;
 
                 // Uniquely identifying BDDs in canonical form
                 bdd::Variable root;
