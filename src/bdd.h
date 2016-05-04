@@ -10,7 +10,6 @@ namespace bdd {
 		public:
 			Bdd();
 			Bdd(Variable var);
-            Bdd(bool b); // This could theoretically reuse static BDD's
             Bdd operator!();      // NOT
 			Bdd operator&(Bdd r); // AND
 			Bdd operator|(Bdd r); // OR

@@ -6,16 +6,16 @@
 #include "bdd.h"
 
 namespace bdd {
-	namespace internal {
+    namespace internal {
 
-		Node::Node() : reference_count(Node::unused) { }
+        Node::Node() : reference_count(Node::unused) { }
 
-		Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
+        Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
 
-		Node* Node::make(Variable root, Node* branch_true, Node* branch_false) {
-			if (branch_true == branch_false) {
-				return branch_false;
-			}
+        Node* Node::make(Variable root, Node* branch_true, Node* branch_false) {
+            if (branch_true == branch_false) {
+                return branch_false;
+            }
 
             // Enforce canonicity (complement only on 1 edge)
             if (is_complemented(branch_false)) {
@@ -25,19 +25,19 @@ namespace bdd {
                 return complement(manager::nodes.lookupOrCreate(node));
             }
 
-			Node node(root, branch_true, branch_false);
-			return manager::nodes.lookupOrCreate(node);
-		}
+            Node node(root, branch_true, branch_false);
+            return manager::nodes.lookupOrCreate(node);
+        }
 
-		Node* Node::ITE(Node* A, Node* B, Node* C) {
+        Node* Node::ITE(Node* A, Node* B, Node* C) {
             // Base cases
-			if (A == true_node) { return B; }
-			if (A == false_node) { return C; }
+            if (A == true_node) { return B; }
+            if (A == false_node) { return C; }
             if (B == true_node && C == false_node) { return A; }
             if (B == false_node && C == true_node) { return complement(A); }
             if (B == C) { return B; }
 
-			// TODO: check if this ITE has been done before in cache
+            // TODO: check if this ITE has been done before in cache
 
             // Normalization rules
             // TODO: order these rules efficiently?
@@ -92,42 +92,42 @@ namespace bdd {
                 result = make(x, R_true, R_false);
             }
 
-			// TODO: put in cache
+            // TODO: put in cache
 
-			return result;
-		}
+            return result;
+        }
 
-		Node* Node::evaluate_at(Node* node, Variable var, bool value) {
+        Node* Node::evaluate_at(Node* node, Variable var, bool value) {
             // Variable is above this node, nothing changes
             if (is_leaf(node) || pointer(node)->root > var) {
                 return node;
             }
 
             // Variable is exactly this node, choose appropriate branch
-			if (pointer(node)->root == var) {
+            if (pointer(node)->root == var) {
                 // Logical XOR
                 return value != is_complemented(node) ? pointer(node)->branch_true : pointer(node)->branch_false;
-			}
+            }
 
             // TODO: check cache now
 
             // Variable is below this node, recurse
             // TODO: are these two different methods equivalent?
             // Option 1: check complement and do something different depending on whether it is complemented or not
-			//Node* new_node;
-			//if (value != is_complemented(node)) { // Logical XOR
-			//	new_node = make(var, evaluate_at(deref(node).branch_true, var, value), evaluate_at(deref(node).branch_false, var, value));
-			//} else {
-			//	new_node = make(var, evaluate_at(deref(node).branch_false, var, value), evaluate_at(deref(node).branch_true, var, value));
-			//}
+            //Node* new_node;
+            //if (value != is_complemented(node)) { // Logical XOR
+            //	new_node = make(var, evaluate_at(deref(node).branch_true, var, value), evaluate_at(deref(node).branch_false, var, value));
+            //} else {
+            //	new_node = make(var, evaluate_at(deref(node).branch_false, var, value), evaluate_at(deref(node).branch_true, var, value));
+            //}
             // Option 2: evaluate recursive case and complement it after
             Node* new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
             new_node = is_complemented(node) ? complement(new_node) : new_node;
 
-			// TODO: cache new_node
+            // TODO: cache new_node
 
-			return new_node;
-		}
+            return new_node;
+        }
 
         // Inverts the lowest order bit
         Node* Node::complement(Node* node) {
@@ -160,29 +160,29 @@ namespace bdd {
             return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
         }
 
-        void Node::print_node(Node* node, int indents) {
+        static void print_rec(Node* node) {
             if (node == Node::true_node) {
-                std::cout << "TRUE" << std::endl;
                 return;
             } else if (node == Node::false_node) {
-                std::cout << "FALSE" << std::endl;
                 return;
             }
 
-            Node* dnode = pointer(node);
-            std::cout << "[Variable: " << dnode->root << ", Comp: ";
-            if (is_complemented(node)) {
-                std::cout << "yes] {" << std::endl;
-            } else {
-                std::cout << "no] {" << std::endl;
-            }
+            uintptr_t r = reinterpret_cast<uintptr_t>(node);
 
-            std::cout << std::string(indents+1, ' ') << "True branch (Variable " << dnode->root << "): ";
-            print_node(dnode->branch_true, indents + 1);
-            std::cout << std::string(indents+1, ' ') << "False branch (Variable " << dnode->root << "): ";
-            print_node(dnode->branch_false, indents + 1);
+            std::cout << r << " [label=\"" << Node::pointer(node)->root << "\"];\n";
 
-            std::cout << std::string(indents, ' ') << "} #end Variable " << dnode->root << std::endl;
+            std::cout << r << " -> " << Node::pointer(node)->branch_false << " [style=dotted];\n";
+            std::cout << r << " -> " << Node::pointer(node)->branch_true << " [style=filled];\n";
         }
-	}
+
+        void Node::print_node(Node* node) {
+            std::cout << "digraph G {\n";
+            std::cout << "2 [shape=box, label=\"false\", style=filled, shape=box, height=0.3, width=0.3];\n";
+            std::cout << "3 [shape=box, label=\"true\", style=filled, shape=box, height=0.3, width=0.3];\n";
+
+            print_rec(node);
+
+            std::cout << "}";
+        }
+    }
 }
