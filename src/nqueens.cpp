@@ -38,13 +38,15 @@ int N;                /* Size of the chess board */
 Bdd **X;              /* BDD variable array */
 Bdd queen;            /* N-queen problem express as a BDD */
 
+void build(int i, int j);
 
 /* Build the requirements for all other fields than (i,j) assuming
    that (i,j) has a queen */
-static void build(int i, int j)
+void build(int i, int j)
 {
     Bdd a = Bdd::bdd_true, b = Bdd::bdd_true, c = Bdd::bdd_true, d = Bdd::bdd_true;
     int k,l;
+    std::cout << "Entered build" << std::endl;
 
     /* No one in the same column */
     for (l=0 ; l<N ; l++)
@@ -123,9 +125,12 @@ int main(int ac, char **av)
         {
             cout << "Adding position " << i << "," << j << "\n" << flush;
             build(i,j);
+            std::cout << "After build" << std::endl;
+            queen.print();
         }
 
     /* Print the results */
+    queen.print();
     set<Variable> vars;
     for (i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);

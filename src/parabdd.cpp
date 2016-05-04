@@ -65,6 +65,22 @@ int main() {
     std::cout << "Should match this: " << std::endl;
     dd.print();
 
+    Bdd cc = c & d;
+    map = cc.one_sat();
+    assert(map[1] && map[2]);
+    std::cout << "This: " << std::endl;
+    cc.print();
+    std::cout << "Should match this: " << std::endl;
+    dd.print();
+
+    Bdd a1 = Bdd::bdd_true;
+    a1 &= a;
+    a1 &= b;
+    std::cout << "Should match this: " << std::endl;
+    a1.print();
+    
+    Bdd::bdd_false.print();
+
     std::cout << "All tests passed" << std::endl;
 
 	return 0;
