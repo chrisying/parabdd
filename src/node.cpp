@@ -163,7 +163,7 @@ namespace bdd {
             if (node == Node::true_node) {
                 std::cout << "TRUE" << std::endl;
                 return;
-            } else if {
+            } else if (node == Node::false_node) {
                 std::cout << "FALSE" << std::endl;
                 return;
             }
