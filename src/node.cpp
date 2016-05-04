@@ -186,7 +186,10 @@ namespace bdd {
 
         void Node::print(Node* node) {
             std::cout << "digraph G {\n";
-            std::cout << qp(Node::false_node) << " [shape=box, label=\"false\", style=filled, shape=box, height=0.3, width=0.3];\n";
+            std::cout << qp(Node::false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
+
+            std::cout << "f [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
+            std::cout << "f -> " << qp(Node::pointer(node)) << " [style=filled]" << (Node::is_complemented(node) ? "[color=red]" : "") << ";\n";
 
             std::set<Node*> visited;
             print_rec(Node::pointer(node), visited);
