@@ -8,7 +8,7 @@
 namespace bdd {
 	namespace internal {
 
-		Node::Node() { }
+		Node::Node() : reference_count(Node::unused) { }
 
 		Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
 

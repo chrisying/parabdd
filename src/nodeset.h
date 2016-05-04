@@ -1,23 +1,27 @@
 #ifndef _NODESET_H_
 #define _NODESET_H_
 
-#include <list>
+#include <cstddef>
 
 #include "node.h"
 
 namespace bdd {
     namespace internal {
+        struct NodeSlot {
+            std::atomic<bool> locked;
+            Node node;
 
-        // Lockfree set Kappa
+            NodeSlot() : locked(false) { }
+        };
+
         class NodeSet {
             public:
                 Node* lookupOrCreate(const Node& value);
                 bool init(size_t mem_usage);
 
             private:
-                // Single-threaded implementation
-                std::list<Node*> _set;
-                Node* table;
+                size_t _elems;
+                NodeSlot* _table;
         };
     }
 }
