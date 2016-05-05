@@ -165,7 +165,11 @@ namespace bdd {
             return reinterpret_cast<uintptr_t>(n);
         }
 
-        static void print_rec(Node* node, std::set<Node*>& visited) {
+
+#define ID(uniq, x) "\"" << uniq << "_" << x << "\""
+#define IDQ(uniq, node) ID(uniq, qp(node))
+
+        static void print_rec(Node* node, std::set<Node*>& visited, uintptr_t uniq) {
             if (visited.count(node)) {
                 return;
             }
@@ -173,26 +177,31 @@ namespace bdd {
                 return;
             }
 
-            std::cout << qp(node) << " [label=\"" << node->root << "\"];\n";
+            std::cout << IDQ(uniq, node) << " [label=\"" << node->root << "\"];\n";
 
-            std::cout << qp(node) << " -> " << qp(Node::pointer(node->branch_false)) << " [style=dashed];\n";
-            std::cout << qp(node) << " -> " << qp(Node::pointer(node->branch_true)) << " [style=filled]" << (Node::is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
+            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, Node::pointer(node->branch_false)) << " [style=dashed];\n";
+            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, Node::pointer(node->branch_true)) << " [style=filled]" << (Node::is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
 
             visited.insert(node);
 
-            print_rec(Node::pointer(node->branch_true), visited);
-            print_rec(Node::pointer(node->branch_false), visited);
+            print_rec(Node::pointer(node->branch_true), visited, uniq);
+            print_rec(Node::pointer(node->branch_false), visited, uniq);
         }
 
-        void Node::print(Node* node) {
-            std::cout << "digraph G {\n";
-            std::cout << qp(Node::false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
+        void Node::print(Node* node, std::string title) {
+            uintptr_t uniq = qp(node);
 
-            std::cout << "f [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
-            std::cout << "f -> " << qp(Node::pointer(node)) << " [style=filled]" << (Node::is_complemented(node) ? "[color=red]" : "") << ";\n";
+            std::cout << "digraph \"G_" << uniq << "\" {\n";
+            std::cout << "labelloc=\"t\";\n";
+            std::cout << "label=\"" << title << "\";\n";
+
+            std::cout << IDQ(uniq, Node::false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
+
+            std::cout << ID(uniq, "f") << " [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
+            std::cout << ID(uniq, "f") " -> " << IDQ(uniq, Node::pointer(node)) << " [style=filled]" << (Node::is_complemented(node) ? "[color=red]" : "") << ";\n";
 
             std::set<Node*> visited;
-            print_rec(Node::pointer(node), visited);
+            print_rec(Node::pointer(node), visited, uniq);
 
             std::cout << "}\n";
         }

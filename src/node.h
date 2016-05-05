@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <atomic>
 #include <limits>
+#include <string>
 
 namespace bdd {
     // Public: the type of a BDD variable
@@ -47,7 +48,7 @@ namespace bdd {
                 static Node* pointer(Node* node);
 
                 // For debug purposes, will print a full graph of the tree
-                static void print(Node* node);
+                static void print(Node* node, std::string title);
         };
     }
 }

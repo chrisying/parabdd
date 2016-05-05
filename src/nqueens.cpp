@@ -38,62 +38,72 @@ int N;                /* Size of the chess board */
 Bdd **X;              /* BDD variable array */
 Bdd queen;            /* N-queen problem express as a BDD */
 
-void build(int i, int j);
+static void build(int x, int y);
 
-/* Build the requirements for all other fields than (i,j) assuming
-   that (i,j) has a queen */
-void build(int i, int j)
+/* Build the requirements for all other fields than (x,y) assuming
+   that (x,y) has a queen */
+static void build(int x, int y)
 {
-    Bdd a = Bdd::bdd_true, b = Bdd::bdd_true, c = Bdd::bdd_true, d = Bdd::bdd_true;
-    int k,l;
-    std::cout << "Entered build" << std::endl;
+    Bdd a = Bdd::bdd_true;
+    Bdd b = Bdd::bdd_true;
+    Bdd c = Bdd::bdd_true;
+    Bdd d = Bdd::bdd_true;
+
+    std::cout << "// Entered build(" << x << ", " << y << ")" << std::endl;
 
     /* No one in the same column */
-    for (l=0 ; l<N ; l++)
-        if (l != j)
-            a &= (X[i][j] > !X[i][l]);
+    for (int row = 0 ; row < N ; row++) {
+        if (row != y) {
+            a &= (X[x][y] > !X[x][row]);
+        }
+    }
+    a.print("a");
 
     /* No one in the same row */
-    for (k=0 ; k<N ; k++)
-        if (k != i)
-            b &= (X[i][j] > !X[k][j]);
+    for (int col = 0; col < N; col++) {
+        if (col != x) {
+            b &= (X[x][y] > !X[col][y]);
+        }
+    }
+    b.print("b");
 
     /* No one in the same up-right diagonal */
-    for (k=0 ; k<N ; k++)
-    {
-        int ll = k-i+j;
-        if (ll>=0 && ll<N)
-            if (k != i)
-                c &= (X[i][j] > !X[k][ll]);
+    for (int k = 0; k < N; k++) {
+        int row = k - x + y;
+        if (row >= 0 && row < N && k != x) {
+            c &= (X[x][y] > !X[k][row]);
+        }
     }
+    c.print("c");
 
     /* No one in the same down-right diagonal */
-    for (k=0 ; k<N ; k++)
-    {
-        int ll = i+j-k;
-        if (ll>=0 && ll<N)
-            if (k != i)
-                d &= (X[i][j] > !X[k][ll]);
+    for (int k = 0 ; k < N && k <= x + y ; k++) {
+        int row = x + y - k;
+        if (row >= 0 && row < N && k != x) {
+            d &= (X[x][y] > !X[k][row]);
+        }
     }
+    d.print("d");
 
-    queen &= (a & b & c & d);
+    Bdd e = a & b & c & d;
+    e.print("e");
+
+    queen &= e;
+    queen.print("queen");
 }
 
 
 int main(int ac, char **av)
 {
     using namespace std ;
-    int n,i,j;
 
-    if (ac != 2)
-    {
+    if (ac != 2) {
         fprintf(stderr, "USAGE:  queen N\n");
         return 1;
     }
 
     N = atoi(av[1]);
-    if (N <= 0)
-    {
+    if (N <= 0) {
         fprintf(stderr, "USAGE:  queen N\n");
         return 1;
     }
@@ -103,45 +113,44 @@ int main(int ac, char **av)
 
     /* Build variable array */
     X = new Bdd*[N];
-    for (n=0 ; n<N ; n++)
+    for (int n=0 ; n<N ; n++)
         X[n] = new Bdd[N];
 
-    for (i=0 ; i<N ; i++)
-        for (j=0 ; j<N ; j++)
+    for (int i=0 ; i<N ; i++)
+        for (int j=0 ; j<N ; j++)
             X[i][j] = Bdd((Variable)(i*N+j));
 
     /* Place a queen in each row */
-    for (i=0 ; i<N ; i++)
+    for (int i=0 ; i<N ; i++)
     {
         Bdd e = Bdd::bdd_false;
-        for (j=0 ; j<N ; j++)
+        for (int j=0 ; j<N ; j++)
             e |= X[i][j];
         queen &= e;
     }
+    queen.print("Queens in each row");
 
     /* Build requirements for each variable(field) */
-    for (i=0 ; i<N ; i++)
-        for (j=0 ; j<N ; j++)
-        {
-            cout << "Adding position " << i << "," << j << "\n" << flush;
+    for (int i=0 ; i<N ; i++) {
+        for (int j=0 ; j<N ; j++) {
             build(i,j);
-            std::cout << "After build" << std::endl;
-            queen.print();
         }
+    }
 
     /* Print the results */
-    queen.print();
+    queen.print("N-queens");
     set<Variable> vars;
-    for (i = 0; i < N * N; i++)
+    for (int i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);
     cout << "There are " << queen.count_sat(vars) << " solutions\n";
     cout << "one is:\n";
 
     unordered_map<Variable, bool> map = queen.one_sat();
     //cout << map << endl;
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            cout << map[i*N + j] << " ";
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            int index = i*N + j;
+            cout << map[static_cast<unsigned int>(index)] << " ";
         }
         cout << endl;
     }

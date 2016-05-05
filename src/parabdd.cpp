@@ -26,7 +26,6 @@ int main() {
     map = c3.one_sat();
     assert(map[1] && !map[2]);
 
-    //Bdd d(1);
     //Bdd c(2);
     //Bdd e(3);
     //Bdd f(4);
@@ -64,10 +63,10 @@ int main() {
     assert(t.count_sat(s2) == 4);
     assert(t.count_sat(s3) == 16);
 
-    Bdd f = Bdd::bdd_false;
-    assert(f.count_sat(s1) == 0);
-    assert(f.count_sat(s2) == 0);
-    assert(f.count_sat(s3) == 0);
+    Bdd f2 = Bdd::bdd_false;
+    assert(f2.count_sat(s1) == 0);
+    assert(f2.count_sat(s2) == 0);
+    assert(f2.count_sat(s3) == 0);
 
     Bdd n1(1);
     Bdd n2(2);
@@ -78,34 +77,6 @@ int main() {
     Bdd t2 = (n1 & n2) | (n3 & n4);
     assert(t1.count_sat(s3) == 9);
     assert(t2.count_sat(s3) == 7);
-
-    /*
-    a &= b;
-    map = a.one_sat();
-    assert(map[1] && map[2]);
-    assert(a.count_sat(c1v) == 1);
-    Bdd dd = d & c;
-    std::cout << "This: " << std::endl;
-    a.print();
-    std::cout << "Should match this: " << std::endl;
-    dd.print();
-
-    Bdd cc = c & d;
-    map = cc.one_sat();
-    assert(map[1] && map[2]);
-    std::cout << "This: " << std::endl;
-    cc.print();
-    std::cout << "Should match this: " << std::endl;
-    dd.print();
-
-    Bdd a1 = Bdd::bdd_true;
-    a1 &= a;
-    a1 &= b;
-    std::cout << "Should match this: " << std::endl;
-    a1.print();
-
-    Bdd::bdd_false.print();
-    */
 
     std::cout << "All tests passed" << std::endl;
 
