@@ -93,9 +93,11 @@ int main() {
     assert(t5.count_sat(s3) == 15);
 
     Bdd t6 = (n2 | n1) > (n3 & !n1);
-    std::cout << "t6 = " << t6.count_sat(s3) << std::endl;
-    t6.print("t6");
     assert(t6.count_sat(s3) == 6);
+
+    Bdd t7 = ((n1 > !n2) & (n1 > !n3)) & (n1 > !n4);
+    t7.print("t7");
+    std::cout << "t7 = " << t7.count_sat(s3) << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 
