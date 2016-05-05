@@ -34,7 +34,7 @@ int main() {
     Bdd h(6);
     Bdd i(7);
     Bdd j(8);
-    Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
+    Bdd g1 = ((d | c) & (i & j)) ^ (((g > h) < i) & ((e | f) | (c & f & j & i)));
     g1.print("g1");
     map = g1.one_sat();
     //assert((map[1] || map[2]) && (map[3] || map[4]));
@@ -55,31 +55,29 @@ int main() {
     int cc3 = c3.count_sat(c3v);
     assert(cc3 == 1);
 
-    a &= b;
-    map = a.one_sat();
-    assert(map[1] && map[2]);
-    assert(a.count_sat(c1v) == 1);
-    Bdd dd = d & c;
-    std::cout << "This: " << std::endl;
-    a.print("");
-    std::cout << "Should match this: " << std::endl;
-    dd.print("");
+    std::set<Variable> s1({1});
+    std::set<Variable> s2({1, 2});
+    std::set<Variable> s3({1, 2, 3, 4});
 
-    Bdd cc = c & d;
-    map = cc.one_sat();
-    assert(map[1] && map[2]);
-    std::cout << "This: " << std::endl;
-    cc.print("");
-    std::cout << "Should match this: " << std::endl;
-    dd.print("");
+    Bdd t = Bdd::bdd_true;
+    assert(t.count_sat(s1) == 2);
+    assert(t.count_sat(s2) == 4);
+    assert(t.count_sat(s3) == 16);
 
-    Bdd a1 = Bdd::bdd_true;
-    a1 &= a;
-    a1 &= b;
-    std::cout << "Should match this: " << std::endl;
-    a1.print("");
+    Bdd f2 = Bdd::bdd_false;
+    assert(f2.count_sat(s1) == 0);
+    assert(f2.count_sat(s2) == 0);
+    assert(f2.count_sat(s3) == 0);
 
-    Bdd::bdd_false.print("");
+    Bdd n1(1);
+    Bdd n2(2);
+    Bdd n3(3);
+    Bdd n4(4);
+
+    Bdd t1 = (n1 | n2) & (n3 | n4);
+    Bdd t2 = (n1 & n2) | (n3 & n4);
+    assert(t1.count_sat(s3) == 9);
+    assert(t2.count_sat(s3) == 3);
 
     std::cout << "All tests passed" << std::endl;
 
