@@ -72,11 +72,30 @@ int main() {
     Bdd n2(2);
     Bdd n3(3);
     Bdd n4(4);
+    Bdd n5(5);
+    Bdd n6(6);
 
     Bdd t1 = (n1 | n2) & (n3 | n4);
     Bdd t2 = (n1 & n2) | (n3 & n4);
     assert(t1.count_sat(s3) == 9);
     assert(t2.count_sat(s3) == 7);
+
+    std::set<Variable> s4({1,2,3,4,5,6});
+    Bdd t3 = ((n1 ^ n2) | !n3) & (((n3 ^ n4)) & !(n6 | n5));
+    //std::cout << "t3.count_sat(s4) = " << t3.count_sat(s4) << std::endl;
+    //t3.print("t3");
+    assert(t3.count_sat(s4) == 6);
+
+    Bdd t4 = n1 > n2;
+    assert(t4.count_sat(s2) == 3);
+
+    Bdd t5 = n1 > (!n2 > (n3 > !n4));
+    assert(t5.count_sat(s3) == 15);
+
+    Bdd t6 = (n2 | n1) > (n3 & !n1);
+    std::cout << "t6 = " << t6.count_sat(s3) << std::endl;
+    t6.print("t6");
+    assert(t6.count_sat(s3) == 6);
 
     std::cout << "All tests passed" << std::endl;
 
