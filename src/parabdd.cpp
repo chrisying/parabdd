@@ -55,6 +55,31 @@ int main() {
     int cc3 = c3.count_sat(c3v);
     assert(cc3 == 1);
 
+    std::set<Variable> s1({1});
+    std::set<Variable> s2({1, 2});
+    std::set<Variable> s3({1, 2, 3, 4});
+
+    Bdd t = Bdd::bdd_true;
+    assert(t.count_sat(s1) == 2);
+    assert(t.count_sat(s2) == 4);
+    assert(t.count_sat(s3) == 16);
+
+    Bdd f = Bdd::bdd_false;
+    assert(f.count_sat(s1) == 0);
+    assert(f.count_sat(s2) == 0);
+    assert(f.count_sat(s3) == 0);
+
+    Bdd n1(1);
+    Bdd n2(2);
+    Bdd n3(3);
+    Bdd n4(4);
+
+    Bdd t1 = (n1 | n2) & (n3 | n4);
+    Bdd t2 = (n1 & n2) | (n3 & n4);
+    assert(t1.count_sat(s3) == 9);
+    assert(t2.count_sat(s3) == 3);
+
+    /*
     a &= b;
     map = a.one_sat();
     assert(map[1] && map[2]);
@@ -78,8 +103,9 @@ int main() {
     a1 &= b;
     std::cout << "Should match this: " << std::endl;
     a1.print();
-    
+
     Bdd::bdd_false.print();
+    */
 
     std::cout << "All tests passed" << std::endl;
 
