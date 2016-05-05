@@ -2,6 +2,7 @@
 #define _BDD_H_
 
 #include <set>
+#include <string>
 
 #include "bdd_internal.h"
 
@@ -28,14 +29,11 @@ namespace bdd {
 
             std::unordered_map<Variable, bool> one_sat();
             int count_sat(std::set<Variable> vars);
-            void print();
+            void print(std::string title);
 
 		private:
             Bdd(internal::Node* node);
             internal::Node* node;
-
-            bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map);
-            int count_sat_helper(internal::Node* node, int n, std::set<Variable> vars);
 	};
 }
 
