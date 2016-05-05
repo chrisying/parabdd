@@ -26,17 +26,17 @@ int main() {
     map = c3.one_sat();
     assert(map[1] && !map[2]);
 
-    Bdd d(1);
-    Bdd c(2);
-    Bdd e(3);
-    Bdd f(4);
-    Bdd g(5);
-    Bdd h(6);
-    Bdd i(7);
-    Bdd j(8);
-    Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
-    g1.print();
-    map = g1.one_sat();
+    //Bdd d(1);
+    //Bdd c(2);
+    //Bdd e(3);
+    //Bdd f(4);
+    //Bdd g(5);
+    //Bdd h(6);
+    //Bdd i(7);
+    //Bdd j(8);
+    //Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
+    //g1.print();
+    //map = g1.one_sat();
     //assert((map[1] || map[2]) && (map[3] || map[4]));
 
     std::set<Variable> av({1});
@@ -77,7 +77,7 @@ int main() {
     Bdd t1 = (n1 | n2) & (n3 | n4);
     Bdd t2 = (n1 & n2) | (n3 & n4);
     assert(t1.count_sat(s3) == 9);
-    assert(t2.count_sat(s3) == 3);
+    assert(t2.count_sat(s3) == 7);
 
     /*
     a &= b;

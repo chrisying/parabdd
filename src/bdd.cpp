@@ -119,7 +119,7 @@ namespace bdd {
             return -1;
         }
 
-        if (internal::Node::is_complemented(this->node)) {
+        if (!internal::Node::is_complemented(this->node)) {
             count = pow2 - count;
         }
 
@@ -146,13 +146,13 @@ namespace bdd {
 
         // TODO: this can be done in parallel
         int countT = count_sat_helper(dnode->branch_true, n, vars);
-        int countF = pow2 - count_sat_helper(dnode->branch_false, n, vars);
+        int countF = count_sat_helper(dnode->branch_false, n, vars);
 
         if (countT == -1 || countF == -1) {
             return -1; // TODO: should -1 be cached?
         }
 
-        if (!internal::Node::is_complemented(dnode->branch_true)) {
+        if (internal::Node::is_complemented(dnode->branch_true)) {
             countT = pow2 - countT;
         }
 
