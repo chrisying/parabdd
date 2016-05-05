@@ -34,81 +34,80 @@
 
 using namespace bdd;
 
-int N;                /* Size of the chess board */
-Bdd **X;              /* BDD variable array */
-Bdd queen;            /* N-queen problem express as a BDD */
+static int N;                /* Size of the chess board */
+static Bdd **X;              /* BDD variable array */
+static Bdd queen;            /* N-queen problem express as a BDD */
 
-static void build(int x, int y);
+static void build(int row, int col);
 
-/* Build the requirements for all other fields than (x,y) assuming
-   that (x,y) has a queen */
-static void build(int x, int y)
+/* Build the requirements for all other fields than (row, col) assuming
+   that (row, col) has a queen */
+static void build(int row, int col)
 {
+    std::cout << "// Entered build(row:" << row << ", col:" << col << ")" << std::endl;
+
     Bdd a = Bdd::bdd_true;
+    for (int x = 0 ; x < N ; x++) {
+        if (x != col) {
+            a &= (X[row][col] > !X[row][x]);
+        }
+    }
+    a.print("Same row");
+
     Bdd b = Bdd::bdd_true;
+    for (int y = 0; y < N; y++) {
+        if (y != col) {
+            b &= (X[row][col] > !X[y][col]);
+        }
+    }
+    b.print("Same column");
+
     Bdd c = Bdd::bdd_true;
+    for (int k=0 ; k<N ; k++) {
+        int ll = k-row+col;
+        if (ll>=0 && ll<N) {
+            if (k != row) {
+                c &= (X[row][col] > !X[k][ll]);
+            }
+        }
+    }
+    c.print("Same up-right diagonal");
+
     Bdd d = Bdd::bdd_true;
-
-    std::cout << "// Entered build(" << x << ", " << y << ")" << std::endl;
-
-    /* No one in the same column */
-    for (int row = 0 ; row < N ; row++) {
-        if (row != y) {
-            a &= (X[x][y] > !X[x][row]);
+    for (int k=0 ; k<N ; k++) {
+        int ll = row+col-k;
+        if (ll>=0 && ll<N) {
+            if (k != row) {
+                d &= (X[row][col] > !X[k][ll]);
+            }
         }
     }
-    a.print("a");
-
-    /* No one in the same row */
-    for (int col = 0; col < N; col++) {
-        if (col != x) {
-            b &= (X[x][y] > !X[col][y]);
-        }
-    }
-    b.print("b");
-
-    /* No one in the same up-right diagonal */
-    for (int k = 0; k < N; k++) {
-        int row = k - x + y;
-        if (row >= 0 && row < N && k != x) {
-            c &= (X[x][y] > !X[k][row]);
-        }
-    }
-    c.print("c");
-
-    /* No one in the same down-right diagonal */
-    for (int k = 0 ; k < N && k <= x + y ; k++) {
-        int row = x + y - k;
-        if (row >= 0 && row < N && k != x) {
-            d &= (X[x][y] > !X[k][row]);
-        }
-    }
-    d.print("d");
+    d.print("Same down-right diagonal");
 
     Bdd e = a & b & c & d;
-    e.print("e");
+    e.print("All conditions");
 
     queen &= e;
-    queen.print("queen");
+    queen.print("Combined Queen");
 }
 
 
-int main(int ac, char **av)
+int main(int ac, char **argv)
 {
     using namespace std ;
 
     if (ac != 2) {
-        fprintf(stderr, "USAGE:  queen N\n");
+        std::cerr << "USAGE: " << argv[0] << " N\n";
         return 1;
     }
 
-    N = atoi(av[1]);
+    N = atoi(argv[1]);
     if (N <= 0) {
-        fprintf(stderr, "USAGE:  queen N\n");
+        std::cerr << "USAGE: " << argv[0] << " N\n";
         return 1;
     }
+    std::cout << "N-queens for " << N << "\n";
 
-    /* Initialize with 100000 nodes, 10000 cache entries and NxN variables */
     queen = Bdd::bdd_true;
 
     /* Build variable array */
@@ -116,24 +115,24 @@ int main(int ac, char **av)
     for (int n=0 ; n<N ; n++)
         X[n] = new Bdd[N];
 
-    for (int i=0 ; i<N ; i++)
-        for (int j=0 ; j<N ; j++)
-            X[i][j] = Bdd((Variable)(i*N+j));
+    for (int row = 0 ; row<N ; row++)
+        for (int col=0 ; col<N ; col++)
+            X[row][col] = Bdd((Variable)(row * N + col));
 
     /* Place a queen in each row */
-    for (int i=0 ; i<N ; i++)
+    for (int row=0 ; row<N ; row++)
     {
         Bdd e = Bdd::bdd_false;
-        for (int j=0 ; j<N ; j++)
-            e |= X[i][j];
+        for (int col=0 ; col<N ; col++)
+            e |= X[row][col];
         queen &= e;
     }
     queen.print("Queens in each row");
 
     /* Build requirements for each variable(field) */
-    for (int i=0 ; i<N ; i++) {
-        for (int j=0 ; j<N ; j++) {
-            build(i,j);
+    for (int row=0 ; row<N ; row++) {
+        for (int col=0 ; col<N ; col++) {
+            build(row,col);
         }
     }
 
@@ -147,9 +146,9 @@ int main(int ac, char **av)
 
     unordered_map<Variable, bool> map = queen.one_sat();
     //cout << map << endl;
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            int index = i*N + j;
+    for (int row = 0; row < N; row++) {
+        for (int col = 0; col < N; col++) {
+            int index = row*N + col;
             cout << map[static_cast<unsigned int>(index)] << " ";
         }
         cout << endl;
