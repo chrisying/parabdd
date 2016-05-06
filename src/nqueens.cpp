@@ -44,23 +44,19 @@ static void build(int row, int col);
    that (row, col) has a queen */
 static void build(int row, int col)
 {
-    std::cout << "// Entered build(row:" << row << ", col:" << col << ")" << std::endl;
-
     Bdd a = Bdd::bdd_true;
     for (int x = 0 ; x < N ; x++) {
         if (x != col) {
             a &= (X[row][col] > !X[row][x]);
         }
     }
-    a.print("Same row");
 
     Bdd b = Bdd::bdd_true;
     for (int y = 0; y < N; y++) {
-        if (y != col) {
+        if (y != row) {
             b &= (X[row][col] > !X[y][col]);
         }
     }
-    b.print("Same column");
 
     Bdd c = Bdd::bdd_true;
     for (int k=0 ; k<N ; k++) {
@@ -71,7 +67,6 @@ static void build(int row, int col)
             }
         }
     }
-    c.print("Same up-right diagonal");
 
     Bdd d = Bdd::bdd_true;
     for (int k=0 ; k<N ; k++) {
@@ -82,13 +77,8 @@ static void build(int row, int col)
             }
         }
     }
-    d.print("Same down-right diagonal");
 
-    Bdd e = a & b & c & d;
-    e.print("All conditions");
-
-    queen &= e;
-    queen.print("Combined Queen");
+    queen &= (a & b & c & d);
 }
 
 
@@ -127,7 +117,6 @@ int main(int ac, char **argv)
             e |= X[row][col];
         queen &= e;
     }
-    queen.print("Queens in each row");
 
     /* Build requirements for each variable(field) */
     for (int row=0 ; row<N ; row++) {
@@ -137,7 +126,7 @@ int main(int ac, char **argv)
     }
 
     /* Print the results */
-    queen.print("N-queens");
+//    queen.print("N-queens");
     set<Variable> vars;
     for (int i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);

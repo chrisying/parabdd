@@ -99,6 +99,13 @@ int main() {
     t7.print("t7");
     std::cout << "t7 = " << t7.count_sat(s3) << std::endl;
 
+    Bdd t8 = (n1 > !n2);
+    t8.print("n1 > !n2");
+    Bdd t9 = (n1 > !n3);
+    t9.print("n1 > !n3");
+    Bdd t10 = (n1 > !n2) & (n1 > !n3);
+    t10.print("(n1 > !n2) & (n1 > !n3)");
+
     std::cout << "All tests passed" << std::endl;
 
 	return 0;

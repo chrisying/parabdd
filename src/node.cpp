@@ -106,22 +106,12 @@ namespace bdd {
 
             // Variable is exactly this node, choose appropriate branch
             if (pointer(node)->root == var) {
-                // Logical XOR
-                return value != is_complemented(node) ? pointer(node)->branch_true : pointer(node)->branch_false;
+                Node* target = (value ? pointer(node)->branch_true : pointer(node)->branch_false);
+                return is_complemented(node) ? complement(target) : target;
             }
 
             // TODO: check cache now
 
-            // Variable is below this node, recurse
-            // TODO: are these two different methods equivalent?
-            // Option 1: check complement and do something different depending on whether it is complemented or not
-            //Node* new_node;
-            //if (value != is_complemented(node)) { // Logical XOR
-            //	new_node = make(var, evaluate_at(deref(node).branch_true, var, value), evaluate_at(deref(node).branch_false, var, value));
-            //} else {
-            //	new_node = make(var, evaluate_at(deref(node).branch_false, var, value), evaluate_at(deref(node).branch_true, var, value));
-            //}
-            // Option 2: evaluate recursive case and complement it after
             Node* new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
             new_node = is_complemented(node) ? complement(new_node) : new_node;
 
@@ -132,11 +122,11 @@ namespace bdd {
 
         // Inverts the lowest order bit
         Node* Node::complement(Node* node) {
-            return reinterpret_cast<Node*>(((uint64_t) node) ^ 0x1);
+            return reinterpret_cast<Node*>(((uintptr_t) node) ^ 0x1);
         }
 
         bool Node::is_complemented(Node* node) {
-            return (((uint64_t) node) & 0x1) == 0x1;
+            return (((uintptr_t) node) & 0x1) == 0x1;
         }
 
         // True iff A and B are the same except the lowest order bit
@@ -158,7 +148,7 @@ namespace bdd {
 
         // Sets lowest order bit to 0
         Node* Node::pointer(Node* node) {
-            return reinterpret_cast<Node*>(((uint64_t) node) & ((uint64_t) ~0x1));
+            return reinterpret_cast<Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
         }
 
         static uintptr_t qp(Node* n) {
