@@ -39,19 +39,19 @@ int main() {
     //assert((map[1] || map[2]) && (map[3] || map[4]));
 
     std::set<Variable> av({1});
-    int ca = a.count_sat(av);
+    int ca = a.count_sat();
     assert(ca == 1);
 
     std::set<Variable> c1v({1, 2});
-    int cc1 = c1.count_sat(c1v);
+    int cc1 = c1.count_sat();
     assert(cc1 == 3);
 
     std::set<Variable> c1v2({1, 2, 3});
-    int cc12 = c1.count_sat(c1v2);
+    int cc12 = c1.count_sat();
     assert(cc12 == 6);
 
     std::set<Variable> c3v({1, 2});
-    int cc3 = c3.count_sat(c3v);
+    int cc3 = c3.count_sat();
     assert(cc3 == 1);
 
     std::set<Variable> s1({1});
@@ -78,6 +78,7 @@ int main() {
     Bdd t1 = (n1 | n2) & (n3 | n4);
     Bdd t2 = (n1 & n2) | (n3 & n4);
     assert(t1.count_sat(s3) == 9);
+    t1.print("(a|b) & (c|d)");
     assert(t2.count_sat(s3) == 7);
 
     std::set<Variable> s4({1,2,3,4,5,6});
