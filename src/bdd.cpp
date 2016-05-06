@@ -83,8 +83,13 @@ namespace bdd {
 
     std::unordered_map<Variable, bool> Bdd::one_sat() {
         std::unordered_map<Variable, bool> map;
-        one_sat_helper(this->node, !internal::Node::is_complemented(this->node), map);
-        return map;
+        if (one_sat_helper(this->node, !internal::Node::is_complemented(this->node), map)) {
+            return map;
+        } else {
+            std::cout << "one_sat() returned with no solution" << std::endl;
+            map.clear();
+            return map;
+        }
     }
 
     static bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map) {
