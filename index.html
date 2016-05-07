@@ -29,15 +29,40 @@
       <div class="inner clearfix">
         <section id="main-content">
           <h1>
-<a id="proposal" class="anchor" href="#proposal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Proposal</h1>
+<a id="final-report" class="anchor" href="#final-report" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Final Report</h1>
 
 <h2>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h2>
 
-<p>Binary Decision Diagrams (BDDs) are commonly used in industry for model checking, such as in computer-aided design. We will implement a parallel BDD library that is optimized for many-core machines, such as the Xeon Phi.</p>
+<p><img src="http://www.chrisying.net/parabdd/images/nqueens.dot.svg" alt=""></p>
 
 <h2>
 <a id="background" class="anchor" href="#background" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h2>
+
+<h2>
+<a id="approach" class="anchor" href="#approach" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Approach</h2>
+
+<h2>
+<a id="results" class="anchor" href="#results" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Results</h2>
+
+<h2>
+<a id="references" class="anchor" href="#references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>References</h2>
+
+<h2>
+<a id="list-of-work" class="anchor" href="#list-of-work" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>List of Work</h2>
+
+<hr>
+
+<h1>
+<a id="proposal" class="anchor" href="#proposal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Proposal</h1>
+
+<h2>
+<a id="summary-1" class="anchor" href="#summary-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>Binary Decision Diagrams (BDDs) are commonly used in industry for model checking, such as in computer-aided design. We will implement a parallel BDD library that is optimized for many-core machines, such as the Xeon Phi.</p>
+
+<h2>
+<a id="background-1" class="anchor" href="#background-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h2>
 
 <p>A BDD is a data structure used to represent boolean functions in a graph structure. BDD's can be used to model state transformations and evaluate the validity of systems. For example, one use case for BDD's is verifying the correctness of concurrent programs to ensure that multiple threads cannot access a critical section at the same time. In general, evaluation for model checking involves taking an initial BDD and a set of transition rules and computing the "reachibility" of the states in an iterative fashion.
 Though there are existing existing packages that perform BDD evaluation, none of them utilize modern multi-core processors like the Xeon Phi. In order to take advantage of multi-core processors, we need to be able to represent a BDD in a structure that multiple processors can access and modify at one. In addition, we need to memoize the computation of different parts of the BDD to prevent duplicate work. These two goals can be met with a lockfree global hash, which reduces synchronization and communication costs compared to a lock-based data structure.</p>
