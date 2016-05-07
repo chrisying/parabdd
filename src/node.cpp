@@ -10,6 +10,7 @@
 
 namespace bdd {
     namespace internal {
+        static constexpr int SIZE_GRANULARITY = 500; // TODO: tune this
         static inline NodePtr evaluate_at(NodePtr node, Variable var, bool value);
         static inline Variable top_variable(NodePtr A, NodePtr B, NodePtr C);
         static inline NodePtr complement(NodePtr node);
@@ -68,7 +69,21 @@ namespace bdd {
 
         Node::Node() { }
 
-        Node::Node(Variable root, NodePtr branch_true, NodePtr branch_false) : branch_true(branch_true), branch_false(branch_false), root(root) { }
+        Node::Node(Variable root, NodePtr branch_true, NodePtr branch_false) : branch_true(branch_true), branch_false(branch_false), root(root) {
+            int size_true, size_false;
+            if (is_leaf(branch_true)) {
+                size_true = 0;
+            } else {
+                size_true = pointer(branch_true)->size;
+            }
+            if (is_leaf(branch_false)) {
+                size_false = 0;
+            } else {
+                size_false = pointer(branch_false)->size;
+            }
+
+            size = size_true + size_false + 1; 
+        }
 
         NodePtr Node::make(Variable root, NodePtr branch_true, NodePtr branch_false) {
             if (branch_true == branch_false) {
@@ -145,8 +160,18 @@ namespace bdd {
                 NodePtr B_true = evaluate_at(B, x, true);
                 NodePtr C_true = evaluate_at(C, x, true);
 
-                NodePtr R_false = parallel ITE(A_false, B_false, C_false);
-                NodePtr R_true = parallel ITE(A_true, B_true, C_true);
+                NodePtr R_false, R_true;
+                if (pointer(A_false)->size + pointer(B_false)->size + pointer(C_false)->size > SIZE_GRANULARITY) {
+                    R_false = parallel ITE(A_false, B_false, C_false);
+                } else {
+                    R_false = ITE(A_false, B_false, C_false);
+                }
+
+                if (pointer(A_false)->size + pointer(B_false)->size + pointer(C_false)->size > SIZE_GRANULARITY) {
+                    R_true = parallel ITE(A_true, B_true, C_true);
+                } else {
+                    R_true = ITE(A_true, B_true, C_true);
+                }
 
                 syncpoint;
 
@@ -207,6 +232,7 @@ namespace bdd {
             print_rec(node, visited, node);
 
             std::cout << "}\n";
+            std::cout << "// Size: " << pointer(node)->size << std::endl;
         }
     }
 }

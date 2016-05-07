@@ -23,6 +23,7 @@ namespace bdd {
                 NodePtr branch_true;
                 NodePtr branch_false;
                 bdd::Variable root;
+                int size;
 
                 // Creates an uninitialized node that is marked as invalid.
                 Node();

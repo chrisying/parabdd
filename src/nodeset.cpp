@@ -14,6 +14,7 @@ namespace bdd {
             dest.root = src.root;
             dest.branch_true = src.branch_true;
             dest.branch_false = src.branch_false;
+            dest.size = src.size;
         }
 
         void NodeSet::init(size_t mem_usage) {
