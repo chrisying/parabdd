@@ -10,15 +10,15 @@
 
 namespace bdd {
     namespace internal {
-        static inline Node* evaluate_at(Node* node, Variable var, bool value);
-        static inline Variable top_variable(Node* A, Node* B, Node* C);
-        static inline Node* complement(Node* node);
-        static inline bool is_complemented(Node* node);
-        static inline bool equals_complement(Node* A, Node* B);
-        static inline bool is_leaf(Node* node);
-        static inline Node* pointer(Node* node);
+        static inline NodePtr evaluate_at(NodePtr node, Variable var, bool value);
+        static inline Variable top_variable(NodePtr A, NodePtr B, NodePtr C);
+        static inline NodePtr complement(NodePtr node);
+        static inline bool is_complemented(NodePtr node);
+        static inline bool equals_complement(NodePtr A, NodePtr B);
+        static inline bool is_leaf(NodePtr node);
+        static inline Node* pointer(NodePtr node);
 
-        static inline Node* evaluate_at(Node* node, Variable var, bool value) {
+        static inline NodePtr evaluate_at(NodePtr node, Variable var, bool value) {
             // Variable is above this node, nothing changes
             if (is_leaf(node) || pointer(node)->root > var) {
                 return node;
@@ -26,70 +26,59 @@ namespace bdd {
 
             // Variable is exactly this node, choose appropriate branch
             if (pointer(node)->root == var) {
-                Node* target = (value ? pointer(node)->branch_true : pointer(node)->branch_false);
+                NodePtr target = (value ? pointer(node)->branch_true : pointer(node)->branch_false);
                 return is_complemented(node) ? complement(target) : target;
             }
             assert(false); // TODO: remove if we use evaluate in anything except ITE
 
-            // Check cache
-            Node* new_node;
-            if (manager::cache.findEvaluateAt(node, var, value, new_node)) {
-                return new_node;
-            }
-
-            new_node = Node::make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
+            NodePtr new_node = Node::make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
             new_node = is_complemented(node) ? complement(new_node) : new_node;
-
-            // Put new_node in cache
-            manager::cache.insertEvaluateAt(node, var, value, new_node);
 
             return new_node;
         }
 
-        static inline Variable top_variable(Node* A, Node* B, Node* C) {
-            auto var = [] (Node* x) {
+        static inline Variable top_variable(NodePtr A, NodePtr B, NodePtr C) {
+            auto var = [] (NodePtr x) {
                 return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
             };
 
             return std::min(var(A), std::min(var(B), var(C)));
         }
 
-        // Inverts the lowest order bit
-        static inline Node* complement(Node* node) {
-            return reinterpret_cast<Node*>(((uintptr_t) node) ^ 0x1);
+        static inline NodePtr complement(NodePtr node) {
+            return node ^ 0x80000000;
         }
 
-        static inline bool is_complemented(Node* node) {
-            return (((uintptr_t) node) & 0x1) == 0x1;
+        static inline bool is_complemented(NodePtr node) {
+            return (node & 0x80000000);
         }
 
-        // True iff A and B are the same except the lowest order bit
-        static inline bool equals_complement(Node* A, Node* B) {
+        static inline bool equals_complement(NodePtr A, NodePtr B) {
             return A == complement(B);
         }
 
-        static inline bool is_leaf(Node* node) {
+        static inline bool is_leaf(NodePtr node) {
             return node == Node::true_node || node == Node::false_node;
         }
 
-        // Sets lowest order bit to 0
-        static inline Node* pointer(Node* node) {
-            return reinterpret_cast<Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
+        static inline Node* pointer(NodePtr node) {
+            uint32_t index = 0x7FFFFFFF & node;
+            return &manager::nodes.table[index].node;
         }
 
         Node::Node() { }
 
-        Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
+        Node::Node(Variable root, NodePtr branch_true, NodePtr branch_false) : branch_true(branch_true), branch_false(branch_false), root(root) { }
 
-        Node* Node::make(Variable root, Node* branch_true, Node* branch_false) {
+        NodePtr Node::make(Variable root, NodePtr branch_true, NodePtr branch_false) {
             if (branch_true == branch_false) {
                 return branch_false;
             }
 
             // Enforce canonicity (complement only on 1 edge)
             if (is_complemented(branch_false)) {
-                Node* new_true = complement(branch_true);
-                Node* new_false = complement(branch_false);
+                NodePtr new_true = complement(branch_true);
+                NodePtr new_false = complement(branch_false);
                 Node node(root, new_true, new_false);
                 return complement(manager::nodes.lookupOrCreate(node));
             }
@@ -98,7 +87,7 @@ namespace bdd {
             return manager::nodes.lookupOrCreate(node);
         }
 
-        Node* Node::ITE(Node* A, Node* B, Node* C) {
+        NodePtr Node::ITE(NodePtr A, NodePtr B, NodePtr C) {
             // Base cases
             if (A == true_node) { return B; }
             if (A == false_node) { return C; }
@@ -107,7 +96,7 @@ namespace bdd {
             if (B == C) { return B; }
 
             // Check if this ITE has been done before in cache
-            Node* result;
+            NodePtr result;
             if (manager::cache.findITE(A, B, C, result)) {
                 return result;
             }
@@ -149,15 +138,15 @@ namespace bdd {
             } else {
                 // If no normalization applies
                 Variable x = top_variable(A, B, C);
-                Node* A_false = evaluate_at(A, x, false);
-                Node* B_false = evaluate_at(B, x, false);
-                Node* C_false = evaluate_at(C, x, false);
-                Node* A_true = evaluate_at(A, x, true);
-                Node* B_true = evaluate_at(B, x, true);
-                Node* C_true = evaluate_at(C, x, true);
+                NodePtr A_false = evaluate_at(A, x, false);
+                NodePtr B_false = evaluate_at(B, x, false);
+                NodePtr C_false = evaluate_at(C, x, false);
+                NodePtr A_true = evaluate_at(A, x, true);
+                NodePtr B_true = evaluate_at(B, x, true);
+                NodePtr C_true = evaluate_at(C, x, true);
 
-                Node* R_false = parallel ITE(A_false, B_false, C_false);
-                Node* R_true = parallel ITE(A_true, B_true, C_true);
+                NodePtr R_false = parallel ITE(A_false, B_false, C_false);
+                NodePtr R_true = parallel ITE(A_true, B_true, C_true);
 
                 syncpoint;
 
@@ -170,47 +159,47 @@ namespace bdd {
             return result;
         }
 
-        static uintptr_t qp(Node* n) {
-            return reinterpret_cast<uintptr_t>(n);
-        }
-
 
 #define ID(uniq, x) "\"" << uniq << "_" << x << "\""
-#define IDQ(uniq, node) ID(uniq, qp(node))
 
-        static void print_rec(Node* node, std::set<Node*>& visited, uintptr_t uniq) {
+        static void print_rec(NodePtr node, std::set<NodePtr>& visited, NodePtr uniq) {
             if (visited.count(node)) {
                 return;
             }
             if (is_leaf(node)) {
                 return;
             }
+            Node* p = pointer(node);
+            node = (is_complemented(node) ? complement(node) : node);
 
-            std::cout << IDQ(uniq, node) << " [label=\"" << node->root << "\"];\n";
+            std::cout << ID(uniq, node) << " [label=\"" << p->root << "\"];\n";
 
-            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, pointer(node->branch_false)) << " [style=dashed];\n";
-            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, pointer(node->branch_true)) << " [style=filled]" << (is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
+            std::cout << ID(uniq, node) << " -> " << ID(uniq, p->branch_false) << " [style=dashed];\n";
+            if (is_complemented(p->branch_true)) {
+                std::cout << ID(uniq, node) << " -> " << ID(uniq, complement(p->branch_true)) << " [style=filled] [color=red];\n";
+            }
+            else {
+                std::cout << ID(uniq, node) << " -> " << ID(uniq, p->branch_true) << " [style=filled];\n";
+            }
 
             visited.insert(node);
 
-            print_rec(pointer(node->branch_true), visited, uniq);
-            print_rec(pointer(node->branch_false), visited, uniq);
+            print_rec(p->branch_true, visited, uniq);
+            print_rec(p->branch_false, visited, uniq);
         }
 
-        void Node::print(Node* node, std::string title) {
-            uintptr_t uniq = qp(node);
-
-            std::cout << "digraph \"G_" << uniq << "\" {\n";
+        void Node::print(NodePtr node, std::string title) {
+            std::cout << "digraph \"G_" << node << "\" {\n";
             std::cout << "labelloc=\"t\";\n";
             std::cout << "label=\"" << title << "\";\n";
 
-            std::cout << IDQ(uniq, false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
+            std::cout << ID(node, false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
 
-            std::cout << ID(uniq, "f") << " [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
-            std::cout << ID(uniq, "f") " -> " << IDQ(uniq, pointer(node)) << " [style=filled]" << (is_complemented(node) ? "[color=red]" : "") << ";\n";
+            std::cout << ID(node, "f") << " [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
+            std::cout << ID(node, "f") " -> " << ID(node, node) << " [style=filled]" << (is_complemented(node) ? "[color=red]" : "") << ";\n";
 
-            std::set<Node*> visited;
-            print_rec(pointer(node), visited, uniq);
+            std::set<NodePtr> visited;
+            print_rec(node, visited, node);
 
             std::cout << "}\n";
         }

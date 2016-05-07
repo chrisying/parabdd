@@ -4,7 +4,7 @@
 #ifndef NOPAR
 #define parallel cilk_spawn
 #define syncpoint cilk_sync
-#elif
+#else
 #define parallel
 #define syncpoint
 #endif

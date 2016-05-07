@@ -2,6 +2,7 @@
 #define _NODESET_H_
 
 #include <cstddef>
+#include <atomic>
 
 #include "node.h"
 
@@ -16,13 +17,13 @@ namespace bdd {
 
         class NodeSet {
             public:
-                Node* lookupOrCreate(const Node& value);
-                bool init(size_t mem_usage);
+                NodePtr lookupOrCreate(const Node& value);
+                void init(size_t mem_usage);
+                NodeSlot* table;
 
+                std::atomic<uint32_t> _count;
             private:
-                size_t _elems;
-                std::atomic<size_t> _count;
-                NodeSlot* _table;
+                uint32_t _elems;
         };
     }
 }

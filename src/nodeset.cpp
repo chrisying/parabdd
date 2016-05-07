@@ -1,25 +1,13 @@
+#include <cassert>
+
 #include "nodeset.h"
 #include "node.h"
+#include "hash.h"
 
 namespace bdd {
     namespace internal {
-        static uintptr_t hash64(uintptr_t key) {
-            key = (~key) + (key << 21); // key = (key << 21) - key - 1;
-            key = key ^ (key >> 24);
-            key = (key + (key << 3)) + (key << 8); // key * 265
-            key = key ^ (key >> 14);
-            key = (key + (key << 2)) + (key << 4); // key * 21
-            key = key ^ (key >> 28);
-            key = key + (key << 31);
-            return key;
-        }
-
-        static size_t hash(const Node& node) {
-            uintptr_t var_hash = hash64(static_cast<uintptr_t>(node.root));
-            uintptr_t true_hash = hash64(reinterpret_cast<uintptr_t>(node.branch_true));
-            uintptr_t false_hash = hash64(reinterpret_cast<uintptr_t>(node.branch_false));
-
-            return var_hash ^ true_hash ^ false_hash;
+        static inline size_t hash(const Node& node) {
+            return hash128(&node, sizeof(Node));
         }
 
         static void copy_node(const Node& src, Node& dest) {
@@ -28,11 +16,13 @@ namespace bdd {
             dest.branch_false = src.branch_false;
         }
 
-        bool NodeSet::init(size_t mem_usage) {
+        void NodeSet::init(size_t mem_usage) {
             _elems = mem_usage / sizeof(NodeSlot);
-            _table = (NodeSlot*) calloc(_elems, sizeof(NodeSlot)); // Much faster than running constructors
+            assert(_elems < std::numeric_limits<int32_t>::max());
+            table = (NodeSlot*) calloc(_elems, sizeof(NodeSlot)); // Much faster than running constructors
 
-            return (_table != nullptr);
+            assert(table != nullptr);
+            table[0].exists = true;
         }
 
         // A lock guard around nodes
@@ -49,13 +39,13 @@ namespace bdd {
                 NodeSlot& _slot;
         };
 
-        Node* NodeSet::lookupOrCreate(const Node& node) {
-            size_t hashed = hash(node);
+        NodePtr NodeSet::lookupOrCreate(const Node& node) {
+            uint32_t hashed = hash(node);
 
-            for (size_t offset = 0; offset < _elems; offset++) {
-                size_t index = (hashed + offset) % _elems;
+            for (uint32_t offset = 0; offset < _elems; offset++) {
+                uint32_t index = (hashed + offset) % _elems;
 
-                NodeSlot& current = _table[index];
+                NodeSlot& current = table[index];
                 LockProtector lock(current);
 
                 if (!current.exists) {
@@ -65,7 +55,7 @@ namespace bdd {
                     _count.fetch_add(1, std::memory_order_relaxed);
                     current.exists = true;
 
-                    return &current.node;
+                    return index;
                 }
 
                 if (node.root == current.node.root &&
@@ -74,11 +64,11 @@ namespace bdd {
 
                     // TODO: increase reference count
                     // It's the node we're looking for!
-                    return &current.node;
+                    return index;
                 }
             }
 
-            return nullptr;
+            return 0;
         }
     }
 }

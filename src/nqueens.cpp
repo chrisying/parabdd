@@ -149,7 +149,7 @@ int main(int ac, char **argv)
     unordered_map<Variable, bool> map = queen.one_sat();
     end = CycleTimer::currentSeconds();
     cout << "Elapsed time for one_sat: " << end - start << " seconds" << std::endl;
-    
+
     for (int row = 0; row < N; row++) {
         for (int col = 0; col < N; col++) {
             int index = row*N + col;

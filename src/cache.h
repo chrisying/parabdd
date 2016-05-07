@@ -2,36 +2,25 @@
 #define _CACHE_H_
 
 #include <cstddef>
+#include <atomic>
 
 #include "node.h"
 
 namespace bdd {
     namespace internal {
         struct CacheItem {
-            enum {
-                ITE,
-                EvaluateAt
-            } tag;
-            union {
-                struct {
-                    const Node* a;
-                    const Node* b;
-                    const Node* c;
-                } ITE;
-                struct {
-                    const Node* target;
-                    Variable var;
-                    bool value;
-                } EvaluateAt;
+            struct {
+                NodePtr a;
+                NodePtr b;
+                NodePtr c;
             } key;
-            union {
-                Node* ITE;
-                Node* EvaluateAt;
-            } value;
+            NodePtr result;
         };
 
         struct CacheSlot {
             std::atomic_flag locked;
+            bool exists;
+
             CacheItem data;
 
             CacheSlot() : locked(false) { }
@@ -39,13 +28,10 @@ namespace bdd {
 
         class Cache {
             public:
-                bool findITE(const Node* a, const Node* b, const Node* c, Node*& result);
-                bool findEvaluateAt(const Node* target, const Variable var, bool value, Node*& result);
+                bool findITE(const NodePtr a, const NodePtr b, const NodePtr c, NodePtr& result);
+                void insertITE(const NodePtr a, const NodePtr b, const NodePtr c, NodePtr result);
 
-                void insertITE(const Node* a, const Node* b, const Node* c, Node* result);
-                void insertEvaluateAt(const Node* target, Variable var, bool value, Node* result);
-
-                bool init(size_t mem_usage);
+                void init(size_t mem_usage);
 
             private:
                 size_t _elems;

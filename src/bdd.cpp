@@ -8,46 +8,44 @@
 #include "bdd.h"
 
 namespace bdd {
-    // Inverts the lowest order bit
-    static inline internal::Node* complement(internal::Node* node) {
-        return reinterpret_cast<internal::Node*>(((uintptr_t) node) ^ 0x1);
+    static inline internal::NodePtr complement(internal::NodePtr node) {
+        return node ^ 0x80000000;
     }
 
-    static inline bool is_complemented(internal::Node* node) {
-        return (((uintptr_t) node) & 0x1) == 0x1;
+    static inline bool is_complemented(internal::NodePtr node) {
+        return (node & 0x80000000);
     }
 
-    static inline bool is_leaf(internal::Node* node) {
+    static inline bool is_leaf(internal::NodePtr node) {
         return node == internal::Node::true_node || node == internal::Node::false_node;
     }
 
     // Sets lowest order bit to 0
-    static inline internal::Node* pointer(internal::Node* node) {
-        return reinterpret_cast<internal::Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
+    static inline internal::Node* pointer(internal::NodePtr node) {
+        uint32_t index = 0x7FFFFFFF & node;
+        return &internal::manager::nodes.table[index].node;
     }
 
-    static bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map);
-    static double count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars);
+    static bool one_sat_helper(internal::NodePtr node, bool p, std::unordered_map<Variable, bool>& map);
+    static double count_sat_helper(internal::NodePtr node, int n, std::set<Variable>& vars);
 
-    Bdd Bdd::bdd_true(internal::Node::true_node);
-    Bdd Bdd::bdd_false(internal::Node::false_node);
+    Bdd Bdd::bdd_true(internal::Node::true_node, true);
+    Bdd Bdd::bdd_false(internal::Node::false_node, true);
 
-	Bdd::Bdd() : node(nullptr) { }
+    Bdd::Bdd() { }
 
     Bdd::Bdd(Variable var) {
         node = internal::Node::make(var, internal::Node::true_node, internal::Node::false_node);
     }
 
-    Bdd::Bdd(internal::Node* node) : node(node) { }
+    Bdd::Bdd(internal::NodePtr node, bool dummy) : node(node) { }
 
     Bdd Bdd::operator!() {
-        return Bdd(complement(this->node));
+        return Bdd(complement(this->node), true);
     }
 
     Bdd Bdd::operator&(Bdd r) {
-        //Bdd temp = Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
-        //internal::Node::print_node(temp.node, 0);
-        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node));
+        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::false_node), true);
     }
 
     Bdd Bdd::operator&=(Bdd r) {
@@ -55,36 +53,36 @@ namespace bdd {
         return *this;
     }
 
-	Bdd Bdd::operator|(Bdd r) {
-        return internal::Node::ITE(this->node, internal::Node::true_node, r.node);
-	}
+    Bdd Bdd::operator|(Bdd r) {
+        return Bdd(internal::Node::ITE(this->node, internal::Node::true_node, r.node), true);
+    }
 
     Bdd Bdd::operator|=(Bdd r) {
         *this = *this | r;
         return *this;
     }
 
-	Bdd Bdd::operator^(Bdd r) {
-        return internal::Node::ITE(this->node, complement(r.node), r.node);
-	}
+    Bdd Bdd::operator^(Bdd r) {
+        return Bdd(internal::Node::ITE(this->node, complement(r.node), r.node), true);
+    }
 
     Bdd Bdd::operator^=(Bdd r) {
         *this = *this ^ r;
         return *this;
     }
 
-	Bdd Bdd::operator>(Bdd r) {
-        return internal::Node::ITE(this->node, r.node, internal::Node::true_node);
-	}
+    Bdd Bdd::operator>(Bdd r) {
+        return Bdd(internal::Node::ITE(this->node, r.node, internal::Node::true_node), true);
+    }
 
     Bdd Bdd::operator>=(Bdd r) {
         *this = *this > r;
         return *this;
     }
 
-	Bdd Bdd::operator<(Bdd r) {
-        return internal::Node::ITE(this->node, internal::Node::true_node, complement(r.node));
-	}
+    Bdd Bdd::operator<(Bdd r) {
+        return Bdd(internal::Node::ITE(this->node, internal::Node::true_node, complement(r.node)), true);
+    }
 
     Bdd Bdd::operator<=(Bdd r) {
         *this = *this < r;
@@ -110,8 +108,7 @@ namespace bdd {
         }
     }
 
-    static bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map) {
-        //std::cout << "Called one_sat with " << node << ", " << p << std::endl;
+    static bool one_sat_helper(internal::NodePtr node, bool p, std::unordered_map<Variable, bool>& map) {
         if (is_leaf(node)) {
             return !p;
         }
@@ -156,7 +153,7 @@ namespace bdd {
     // should be that count_sat_helper will return the exact number of SAT
     // assignments. We should do the negations at the base case and right
     // before adding to cache.
-    static double count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars) {
+    static double count_sat_helper(internal::NodePtr node, int n, std::set<Variable>& vars) {
         // TODO: handle overflow by using real doubles
         double pow2 = pow(2, n);
         if (is_leaf(node)) {

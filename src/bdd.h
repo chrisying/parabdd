@@ -32,8 +32,8 @@ namespace bdd {
             void print(std::string title);
 
 		private:
-            Bdd(internal::Node* node);
-            internal::Node* node;
+            Bdd(internal::NodePtr node, bool dummy);
+            internal::NodePtr node;
 	};
 }
 

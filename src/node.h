@@ -2,7 +2,6 @@
 #define _NODE_H_
 
 #include <cstdint>
-#include <atomic>
 #include <limits>
 #include <string>
 
@@ -12,28 +11,30 @@ namespace bdd {
 
     namespace internal {
         // Our internal BDD representation
-        // A pointer to a Node will have lowest order bit set to 1 if it is complemented
+        // A pointer to a Node will have the highest order bit set to 1 if it is complemented
+        typedef uint32_t NodePtr;
+
         class Node {
             public:
-                // SeemsGood -- Documented GCC/Clang builtins hack
-                static constexpr Node* true_node = __builtin_constant_p((Node*) 1) ? (Node*) 3 : (Node*) 3;  // 3 == 0b11 == compl(0b10) == compl(2)
-                static constexpr Node* false_node = __builtin_constant_p((Node*) 0) ? (Node*) 2 : (Node*) 2;
+                static constexpr NodePtr true_node = 0x80000000;
+                static constexpr NodePtr false_node = 0x00000000;
+
                 // Uniquely identifying BDDs in canonical form
+                NodePtr branch_true;
+                NodePtr branch_false;
                 bdd::Variable root;
-                Node* branch_true;
-                Node* branch_false;
 
                 // Creates an uninitialized node that is marked as invalid.
                 Node();
                 // Creates node on stack, should be ONLY used in make to get heap pointer
-                Node(Variable root, Node* branch_true, Node* branch_false);
+                Node(Variable root, NodePtr branch_true, NodePtr branch_false);
 
                 // Creates node on the heap, this is the pointer that should be used in other operations
-                static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
-                static Node* ITE(Node* A, Node* B, Node* C);
+                static NodePtr make(bdd::Variable root, NodePtr branch_true, NodePtr branch_false);
+                static NodePtr ITE(NodePtr A, NodePtr B, NodePtr C);
 
                 // For debug purposes, will print a full graph of the tree
-                static void print(Node* node, std::string title);
+                static void print(NodePtr node, std::string title);
         };
     }
 }
