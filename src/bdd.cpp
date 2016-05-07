@@ -8,8 +8,26 @@
 #include "bdd.h"
 
 namespace bdd {
+    // Inverts the lowest order bit
+    static inline internal::Node* complement(internal::Node* node) {
+        return reinterpret_cast<internal::Node*>(((uintptr_t) node) ^ 0x1);
+    }
+
+    static inline bool is_complemented(internal::Node* node) {
+        return (((uintptr_t) node) & 0x1) == 0x1;
+    }
+
+    static inline bool is_leaf(internal::Node* node) {
+        return node == internal::Node::true_node || node == internal::Node::false_node;
+    }
+
+    // Sets lowest order bit to 0
+    static inline internal::Node* pointer(internal::Node* node) {
+        return reinterpret_cast<internal::Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
+    }
+
     static bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map);
-    static long long count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars);
+    static double count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars);
 
     Bdd Bdd::bdd_true(internal::Node::true_node);
     Bdd Bdd::bdd_false(internal::Node::false_node);
@@ -23,7 +41,7 @@ namespace bdd {
     Bdd::Bdd(internal::Node* node) : node(node) { }
 
     Bdd Bdd::operator!() {
-        return Bdd(internal::Node::complement(this->node));
+        return Bdd(complement(this->node));
     }
 
     Bdd Bdd::operator&(Bdd r) {
@@ -47,7 +65,7 @@ namespace bdd {
     }
 
 	Bdd Bdd::operator^(Bdd r) {
-        return internal::Node::ITE(this->node, internal::Node::complement(r.node), r.node);
+        return internal::Node::ITE(this->node, complement(r.node), r.node);
 	}
 
     Bdd Bdd::operator^=(Bdd r) {
@@ -65,7 +83,7 @@ namespace bdd {
     }
 
 	Bdd Bdd::operator<(Bdd r) {
-        return internal::Node::ITE(this->node, internal::Node::true_node, internal::Node::complement(r.node));
+        return internal::Node::ITE(this->node, internal::Node::true_node, complement(r.node));
 	}
 
     Bdd Bdd::operator<=(Bdd r) {
@@ -83,7 +101,7 @@ namespace bdd {
 
     std::unordered_map<Variable, bool> Bdd::one_sat() {
         std::unordered_map<Variable, bool> map;
-        if (one_sat_helper(this->node, !internal::Node::is_complemented(this->node), map)) {
+        if (one_sat_helper(this->node, !is_complemented(this->node), map)) {
             return map;
         } else {
             std::cout << "one_sat() returned with no solution" << std::endl;
@@ -94,11 +112,11 @@ namespace bdd {
 
     static bool one_sat_helper(internal::Node* node, bool p, std::unordered_map<Variable, bool>& map) {
         //std::cout << "Called one_sat with " << node << ", " << p << std::endl;
-        if (internal::Node::is_leaf(node)) {
+        if (is_leaf(node)) {
             return !p;
         }
 
-        internal::Node* dnode = internal::Node::pointer(node);
+        internal::Node* dnode = pointer(node);
 
         map[dnode->root] = false;
         if (one_sat_helper(dnode->branch_false, p, map)) {
@@ -106,7 +124,7 @@ namespace bdd {
         }
 
         map[dnode->root] = true;
-        if (internal::Node::is_complemented(dnode->branch_true)) {
+        if (is_complemented(dnode->branch_true)) {
             p = !p;
         }
 
@@ -117,17 +135,17 @@ namespace bdd {
      * Count SAT
      **/
 
-    long long Bdd::count_sat(std::set<Variable> vars) {
+    double Bdd::count_sat(std::set<Variable> vars) {
         int n = vars.size();
-        long long pow2 = pow(2, n);
-        long long count = count_sat_helper(this->node, n, vars);
+        double pow2 = pow(2, n);
+        double count = count_sat_helper(this->node, n, vars);
 
-        if (count == -1) {
-            std::cout << "A variable in the BDD was not declared in vars" << std::endl;
-            return -1;
-        }
+        //if (count == -1) {
+        //    std::cout << "A variable in the BDD was not declared in vars" << std::endl;
+        //    return -1;
+        //}
 
-        if (!internal::Node::is_complemented(this->node)) {
+        if (!is_complemented(this->node)) {
             count = pow2 - count;
         }
 
@@ -138,34 +156,30 @@ namespace bdd {
     // should be that count_sat_helper will return the exact number of SAT
     // assignments. We should do the negations at the base case and right
     // before adding to cache.
-    static long long count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars) {
+    static double count_sat_helper(internal::Node* node, int n, std::set<Variable>& vars) {
         // TODO: handle overflow by using real doubles
-        long long pow2 = pow(2, n);
-        if (internal::Node::is_leaf(node)) {
+        double pow2 = pow(2, n);
+        if (is_leaf(node)) {
             return pow2;
         }
 
         // TODO: check cache now
 
-        internal::Node* dnode = internal::Node::pointer(node);
+        internal::Node* dnode = pointer(node);
         if (vars.count(dnode->root) == 0) {
-            std::cout << "dnode->root not found " << dnode->root << std::endl;
-            return -1;
+            std::cout << "Undeclared variable: " << dnode->root << std::endl;
+            assert(false);
         }
 
         // TODO: this can be done in parallel
-        long long countT = count_sat_helper(dnode->branch_true, n, vars);
-        long long countF = count_sat_helper(dnode->branch_false, n, vars);
+        double countT = count_sat_helper(dnode->branch_true, n, vars);
+        double countF = count_sat_helper(dnode->branch_false, n, vars);
 
-        if (countT == -1 || countF == -1) {
-            return -1; // TODO: should -1 be cached?
-        }
-
-        if (internal::Node::is_complemented(dnode->branch_true)) {
+        if (is_complemented(dnode->branch_true)) {
             countT = pow2 - countT;
         }
 
-        long long count = countT + (countF - countT) / 2;
+        double count = countT + (countF - countT) / 2;
         //assert(count >= 0);
 
         // TODO: add to cache now

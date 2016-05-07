@@ -38,14 +38,6 @@ namespace bdd {
                 // Creates node on the heap, this is the pointer that should be used in other operations
                 static Node* make(bdd::Variable root, Node* branch_true, Node* branch_false);
                 static Node* ITE(Node* A, Node* B, Node* C);
-                static Node* evaluate_at(Node* node, bdd::Variable var, bool value);
-                static Node* complement(Node* node);
-
-                static bool is_complemented(Node* node);
-                static bool equals_complement(Node* A, Node* B);
-                static bool is_leaf(Node* node);
-                static Variable top_variable(Node* A, Node* B, Node* C);
-                static Node* pointer(Node* node);
 
                 // For debug purposes, will print a full graph of the tree
                 static void print(Node* node, std::string title);
