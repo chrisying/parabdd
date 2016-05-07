@@ -81,7 +81,10 @@
 
 					<h2>
 						<a id="results" class="anchor" href="#results" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Results</h2>
-					<table class="c10">
+
+					<p>To benchmark our library, we implemented a naive N-queens algorithm and compared runtimes with BuDDy and our library using varying amounts of cores on the GHC machines.  We haven't finished analysis yet, but we present a quick survey of the results below.  In particular, we note a greater than 10x speedup over BuDDy when utilizing the entire machine on large BDDs.</p>
+
+					<table>
 						<tbody>
 							<tr>
 								<td></td>
@@ -90,7 +93,7 @@
 							<tr>
 								<td>N</td>
 								<td>Multicore ParaBDD</td>
-								<td>Buddy</td>
+								<td>BuDDy</td>
 								<td>1-core ParaBDD</td>
 								<td>4-core ParaBDD</td>
 							</tr>
