@@ -49,8 +49,11 @@
 Bdd b(2);
 Bdd c = a &amp; b;
 
-unordered_map&lt;Var, bool&gt; map = c.one_sat(); // Returns &lt;1:true, 2:true&gt;
-int num = c.count_sat(); // Returns 1 (exactly 1 satisfying assignment)
+// Gives one satisfying assignment to the expression (returns &lt;1:true, 2:true&gt;)
+unordered_map&lt;Var, bool&gt; map = c.one_sat();
+
+// Count the number of satisfying assignments (returns 1 for a &amp; b)
+int num = c.count_sat();
 </code></pre>
 
 <p>The following mechanisms are required to generate the BDD:</p>
@@ -61,7 +64,7 @@ int num = c.count_sat(); // Returns 1 (exactly 1 satisfying assignment)
 <li>A set of logically consistent "rewrite" rules that allows us to enforce a canonical form on the structure of BDD's.</li>
 </ul>
 
-<p>Most existing BDD libraries, including the well-know libraries <a href="http://buddy.sourceforge.net/manual/main.html">BuDDy</a> and CUDD, have efficient single-threaded implementations for the first two points and have a decent set of canonicity rules. However, according to the <a href="http://essay.utwente.nl/61650/1/thesis_Tom_van_Dijk.pdf">literature</a> that we reviewed, there are huge opportunities for improvement on all three fronts:</p>
+<p>Most existing BDD libraries, including the well-know libraries <a href="http://buddy.sourceforge.net/manual/main.html">BuDDy</a> and <a href="http://vlsi.colorado.edu/%7Efabio/CUDD/cudd.pdf">CUDD</a>, have efficient single-threaded implementations for the first two points and have a decent set of canonicity rules. However, according to the <a href="http://essay.utwente.nl/61650/1/thesis_Tom_van_Dijk.pdf">literature</a> that we reviewed, there are huge opportunities for improvement on all three fronts:</p>
 
 <ul>
 <li>We can use a lock-free or fine-grained locking hash table to allow multi-threaded access to the uniques table and the cache.</li>
@@ -96,6 +99,10 @@ int num = c.count_sat(); // Returns 1 (exactly 1 satisfying assignment)
 
 <h2>
 <a id="references" class="anchor" href="#references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>References</h2>
+
+<p>Van Dijk, Tom, Alfons Laarman, and Jaco Van De Pol. "Multi-core BDD operations for symbolic reachability." Electronic Notes in Theoretical Computer Science 296 (2013): 127-143.</p>
+
+<p>Somenzi, Fabio. "CUDD: CU Decision Diagram Package Release 3.0. 0." (2015).</p>
 
 <h2>
 <a id="list-of-work" class="anchor" href="#list-of-work" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>List of Work</h2>
