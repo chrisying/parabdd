@@ -6,11 +6,12 @@
 #include <set>
 
 #include "bdd.h"
+#include "parallel.h"
 
 namespace bdd {
     namespace internal {
 
-        Node::Node() : reference_count(Node::unused) { }
+        Node::Node() { }
 
         Node::Node(Variable root, Node* branch_true, Node* branch_false) : root(root), branch_true(branch_true), branch_false(branch_false) { }
 
@@ -89,10 +90,10 @@ namespace bdd {
                 Node* B_true = evaluate_at(B, x, true);
                 Node* C_true = evaluate_at(C, x, true);
 
-                Node* R_false = cilk_spawn ITE(A_false, B_false, C_false);
-                Node* R_true = cilk_spawn ITE(A_true, B_true, C_true);
+                Node* R_false = parallel ITE(A_false, B_false, C_false);
+                Node* R_true = parallel ITE(A_true, B_true, C_true);
 
-                cilk_sync;
+                syncpoint;
 
                 result = make(x, R_true, R_false);
             }

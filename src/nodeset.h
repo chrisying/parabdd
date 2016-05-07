@@ -8,10 +8,10 @@
 namespace bdd {
     namespace internal {
         struct NodeSlot {
-            std::atomic<bool> locked;
-            Node node;
+            std::atomic_flag locked;
+            bool exists;
 
-            NodeSlot() : locked(false) { }
+            Node node;
         };
 
         class NodeSet {
@@ -21,6 +21,7 @@ namespace bdd {
 
             private:
                 size_t _elems;
+                std::atomic<size_t> _count;
                 NodeSlot* _table;
         };
     }

@@ -46,12 +46,10 @@ namespace bdd {
         struct LockProtector {
             public:
                 LockProtector(CacheSlot& slot) : _slot(slot) {
-                    do {
-                        while (_slot.locked);
-                    } while (_slot.locked.exchange(true));
+                    while (_slot.locked.test_and_set(std::memory_order_acquire));
                 }
                 ~LockProtector() {
-                    _slot.locked = false;
+                    _slot.locked.clear(std::memory_order_release);
                 }
 
             private:

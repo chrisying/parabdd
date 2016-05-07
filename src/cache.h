@@ -31,7 +31,7 @@ namespace bdd {
         };
 
         struct CacheSlot {
-            std::atomic<bool> locked;
+            std::atomic_flag locked;
             CacheItem data;
 
             CacheSlot() : locked(false) { }

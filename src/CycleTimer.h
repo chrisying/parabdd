@@ -11,10 +11,6 @@
 
   #include <stdio.h>  // fprintf
   #include <stdlib.h> // exit
-
-#elif _WIN32
-#  include <windows.h>
-#  include <time.h>
 #else
 #  include <stdio.h>
 #  include <stdlib.h>
@@ -44,10 +40,6 @@
     static SysClock currentTicks() {
 #if defined(__APPLE__) && !defined(__x86_64__)
       return mach_absolute_time();
-#elif defined(_WIN32)
-      LARGE_INTEGER qwTime;
-      QueryPerformanceCounter(&qwTime);
-      return qwTime.QuadPart;
 #elif defined(__x86_64__)
       unsigned int a, d;
       asm volatile("rdtsc" : "=a" (a), "=d" (d));
