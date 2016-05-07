@@ -28,7 +28,7 @@ namespace bdd {
             static Bdd bdd_false;
 
             std::unordered_map<Variable, bool> one_sat();
-            long long count_sat(std::set<Variable> vars);
+            double count_sat(std::set<Variable> vars);
             void print(std::string title);
 
 		private:

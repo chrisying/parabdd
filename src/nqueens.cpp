@@ -135,11 +135,15 @@ int main(int ac, char **argv)
     set<Variable> vars;
     for (int i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);
+
     start = CycleTimer::currentSeconds();
+
     cout << "There are " << queen.count_sat(vars) << " solutions\n";
+
     end = CycleTimer::currentSeconds();
+
     cout << "Elapsed time for count_sat: " << end - start << " seconds" << std::endl;
-    cout << "one is:\n";
+    cout << "One solution is:\n";
 
     start = CycleTimer::currentSeconds();
     unordered_map<Variable, bool> map = queen.one_sat();

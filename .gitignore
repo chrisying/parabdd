@@ -3,3 +3,4 @@ nqueens
 bin/
 *.swp
 *.png
+*.out

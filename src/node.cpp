@@ -10,6 +10,72 @@
 
 namespace bdd {
     namespace internal {
+        static inline Node* evaluate_at(Node* node, Variable var, bool value);
+        static inline Variable top_variable(Node* A, Node* B, Node* C);
+        static inline Node* complement(Node* node);
+        static inline bool is_complemented(Node* node);
+        static inline bool equals_complement(Node* A, Node* B);
+        static inline bool is_leaf(Node* node);
+        static inline Node* pointer(Node* node);
+
+        static inline Node* evaluate_at(Node* node, Variable var, bool value) {
+            // Variable is above this node, nothing changes
+            if (is_leaf(node) || pointer(node)->root > var) {
+                return node;
+            }
+
+            // Variable is exactly this node, choose appropriate branch
+            if (pointer(node)->root == var) {
+                Node* target = (value ? pointer(node)->branch_true : pointer(node)->branch_false);
+                return is_complemented(node) ? complement(target) : target;
+            }
+            assert(false); // TODO: remove if we use evaluate in anything except ITE
+
+            // Check cache
+            Node* new_node;
+            if (manager::cache.findEvaluateAt(node, var, value, new_node)) {
+                return new_node;
+            }
+
+            new_node = Node::make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
+            new_node = is_complemented(node) ? complement(new_node) : new_node;
+
+            // Put new_node in cache
+            manager::cache.insertEvaluateAt(node, var, value, new_node);
+
+            return new_node;
+        }
+
+        static inline Variable top_variable(Node* A, Node* B, Node* C) {
+            auto var = [] (Node* x) {
+                return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
+            };
+
+            return std::min(var(A), std::min(var(B), var(C)));
+        }
+
+        // Inverts the lowest order bit
+        static inline Node* complement(Node* node) {
+            return reinterpret_cast<Node*>(((uintptr_t) node) ^ 0x1);
+        }
+
+        static inline bool is_complemented(Node* node) {
+            return (((uintptr_t) node) & 0x1) == 0x1;
+        }
+
+        // True iff A and B are the same except the lowest order bit
+        static inline bool equals_complement(Node* A, Node* B) {
+            return A == complement(B);
+        }
+
+        static inline bool is_leaf(Node* node) {
+            return node == Node::true_node || node == Node::false_node;
+        }
+
+        // Sets lowest order bit to 0
+        static inline Node* pointer(Node* node) {
+            return reinterpret_cast<Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
+        }
 
         Node::Node() { }
 
@@ -104,64 +170,6 @@ namespace bdd {
             return result;
         }
 
-        Node* Node::evaluate_at(Node* node, Variable var, bool value) {
-            // Variable is above this node, nothing changes
-            if (is_leaf(node) || pointer(node)->root > var) {
-                return node;
-            }
-
-            // Variable is exactly this node, choose appropriate branch
-            if (pointer(node)->root == var) {
-                Node* target = (value ? pointer(node)->branch_true : pointer(node)->branch_false);
-                return is_complemented(node) ? complement(target) : target;
-            }
-
-            // Check cache
-            Node* new_node;
-            if (manager::cache.findEvaluateAt(node, var, value, new_node)) {
-                return new_node;
-            }
-
-            new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
-            new_node = is_complemented(node) ? complement(new_node) : new_node;
-
-            // Put new_node in cache
-            manager::cache.insertEvaluateAt(node, var, value, new_node);
-
-            return new_node;
-        }
-
-        // Inverts the lowest order bit
-        Node* Node::complement(Node* node) {
-            return reinterpret_cast<Node*>(((uintptr_t) node) ^ 0x1);
-        }
-
-        bool Node::is_complemented(Node* node) {
-            return (((uintptr_t) node) & 0x1) == 0x1;
-        }
-
-        // True iff A and B are the same except the lowest order bit
-        bool Node::equals_complement(Node* A, Node* B) {
-            return A == complement(B);
-        }
-
-        bool Node::is_leaf(Node* node) {
-            return node == Node::true_node || node == Node::false_node;
-        }
-
-        Variable Node::top_variable(Node* A, Node* B, Node* C) {
-            auto var = [] (Node* x) {
-                return (is_leaf(x) ? std::numeric_limits<Variable>::max() : pointer(x)->root);
-            };
-
-            return std::min(var(A), std::min(var(B), var(C)));
-        }
-
-        // Sets lowest order bit to 0
-        Node* Node::pointer(Node* node) {
-            return reinterpret_cast<Node*>(((uintptr_t) node) & ((uintptr_t) ~0x1LL));
-        }
-
         static uintptr_t qp(Node* n) {
             return reinterpret_cast<uintptr_t>(n);
         }
@@ -174,19 +182,19 @@ namespace bdd {
             if (visited.count(node)) {
                 return;
             }
-            if (Node::is_leaf(node)) {
+            if (is_leaf(node)) {
                 return;
             }
 
             std::cout << IDQ(uniq, node) << " [label=\"" << node->root << "\"];\n";
 
-            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, Node::pointer(node->branch_false)) << " [style=dashed];\n";
-            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, Node::pointer(node->branch_true)) << " [style=filled]" << (Node::is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
+            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, pointer(node->branch_false)) << " [style=dashed];\n";
+            std::cout << IDQ(uniq, node) << " -> " << IDQ(uniq, pointer(node->branch_true)) << " [style=filled]" << (is_complemented(node->branch_true) ? "[color=red]" : "") << ";\n";
 
             visited.insert(node);
 
-            print_rec(Node::pointer(node->branch_true), visited, uniq);
-            print_rec(Node::pointer(node->branch_false), visited, uniq);
+            print_rec(pointer(node->branch_true), visited, uniq);
+            print_rec(pointer(node->branch_false), visited, uniq);
         }
 
         void Node::print(Node* node, std::string title) {
@@ -196,13 +204,13 @@ namespace bdd {
             std::cout << "labelloc=\"t\";\n";
             std::cout << "label=\"" << title << "\";\n";
 
-            std::cout << IDQ(uniq, Node::false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
+            std::cout << IDQ(uniq, false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
 
             std::cout << ID(uniq, "f") << " [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
-            std::cout << ID(uniq, "f") " -> " << IDQ(uniq, Node::pointer(node)) << " [style=filled]" << (Node::is_complemented(node) ? "[color=red]" : "") << ";\n";
+            std::cout << ID(uniq, "f") " -> " << IDQ(uniq, pointer(node)) << " [style=filled]" << (is_complemented(node) ? "[color=red]" : "") << ";\n";
 
             std::set<Node*> visited;
-            print_rec(Node::pointer(node), visited, uniq);
+            print_rec(pointer(node), visited, uniq);
 
             std::cout << "}\n";
         }
