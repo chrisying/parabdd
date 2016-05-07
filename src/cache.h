@@ -1,5 +1,5 @@
-#ifndef _NODESET_H_
-#define _NODESET_H_
+#ifndef _CACHE_H_
+#define _CACHE_H_
 
 #include <cstddef>
 

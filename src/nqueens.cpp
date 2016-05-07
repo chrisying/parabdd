@@ -31,6 +31,7 @@
 #include <iostream>
 
 #include "bdd.h"
+#include "CycleTimer.h"
 
 using namespace bdd;
 
@@ -98,6 +99,7 @@ int main(int ac, char **argv)
     }
     std::cout << "N-queens for " << N << "\n";
 
+    double start = CycleTimer::currentSeconds();
     queen = Bdd::bdd_true;
 
     /* Build variable array */
@@ -125,16 +127,25 @@ int main(int ac, char **argv)
         }
     }
 
+    double end = CycleTimer::currentSeconds();
+    cout << "Elapsed time for BDD construction: " << end - start << " seconds" << std::endl;
+
     /* Print the results */
 //    queen.print("N-queens");
     set<Variable> vars;
     for (int i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);
+    start = CycleTimer::currentSeconds();
     cout << "There are " << queen.count_sat(vars) << " solutions\n";
+    end = CycleTimer::currentSeconds();
+    cout << "Elapsed time for count_sat: " << end - start << " seconds" << std::endl;
     cout << "one is:\n";
 
+    start = CycleTimer::currentSeconds();
     unordered_map<Variable, bool> map = queen.one_sat();
-    //cout << map << endl;
+    end = CycleTimer::currentSeconds();
+    cout << "Elapsed time for one_sat: " << end - start << " seconds" << std::endl;
+    
     for (int row = 0; row < N; row++) {
         for (int col = 0; col < N; col++) {
             int index = row*N + col;

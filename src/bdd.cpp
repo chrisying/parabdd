@@ -148,7 +148,8 @@ namespace bdd {
         // TODO: check cache now
 
         internal::Node* dnode = internal::Node::pointer(node);
-        if (!vars.count(dnode->root)) {
+        if (vars.count(dnode->root) == 0) {
+            std::cout << "dnode->root not found " << dnode->root << std::endl;
             return -1;
         }
 
@@ -164,7 +165,8 @@ namespace bdd {
             countT = pow2 - countT;
         }
 
-        long long count = (countT + countF) / 2;
+        long long count = countT + (countF - countT) / 2;
+        //assert(count >= 0);
 
         // TODO: add to cache now
 

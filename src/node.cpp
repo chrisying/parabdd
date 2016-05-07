@@ -1,3 +1,4 @@
+#include <cassert>
 #include <limits>
 #include <cstdint>
 #include <iostream>
@@ -38,12 +39,13 @@ namespace bdd {
             if (B == false_node && C == true_node) { return complement(A); }
             if (B == C) { return B; }
 
-            // TODO: check if this ITE has been done before in cache
+            // Check if this ITE has been done before in cache
+            Node* result;
+            if (manager::cache.findITE(A, B, C, result)) {
+                return result;
+            }
 
             // Normalization rules
-            // TODO: order these rules efficiently?
-            Node* result;
-
             if (A == B) {
                 // ITE(A,A,C) -> ITE(A,1,C)
                 result = ITE(A, true_node, C);
@@ -93,7 +95,8 @@ namespace bdd {
                 result = make(x, R_true, R_false);
             }
 
-            // TODO: put in cache
+            // Put in cache
+            manager::cache.insertITE(A, B, C, result);
 
             return result;
         }
@@ -110,12 +113,17 @@ namespace bdd {
                 return is_complemented(node) ? complement(target) : target;
             }
 
-            // TODO: check cache now
+            // Check cache
+            Node* new_node;
+            if (manager::cache.findEvaluateAt(node, var, value, new_node)) {
+                return new_node;
+            }
 
-            Node* new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
+            new_node = make(var, evaluate_at(pointer(node)->branch_true, var, value), evaluate_at(pointer(node)->branch_false, var, value));
             new_node = is_complemented(node) ? complement(new_node) : new_node;
 
-            // TODO: cache new_node
+            // Put new_node in cache
+            manager::cache.insertEvaluateAt(node, var, value, new_node);
 
             return new_node;
         }
