@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PBS -lwalltime=0:6:00
+
+# Move to my $SCRATCH directory.
+cd $SCRATCH
+
+# NOTE: Makefile must include Wl,-rpath,/home/$USER/lib64
+# For this to work, this requires lib64 in the home directory to contain
+# the gcc6.1 lib64 folder.
+cp /home/$USER/parabdd/nqueens nqueens
+export LD_LIBRARY_PATH=/home/$USER/lib64/:$LD_LIBRARY_PATH
+
+# Run my executable
+for i in {7..13}; do
+	./nqueens $i
+done
