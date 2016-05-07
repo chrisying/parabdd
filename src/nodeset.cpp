@@ -31,7 +31,7 @@ namespace bdd {
 
         bool NodeSet::init(size_t mem_usage) {
             _elems = mem_usage / sizeof(NodeSlot);
-            _table = new NodeSlot[_elems];
+            _table = (NodeSlot*) calloc(_elems, sizeof(NodeSlot)); // Much faster than running constructors
 
             return (_table != nullptr);
         }

@@ -89,8 +89,10 @@ namespace bdd {
                 Node* B_true = evaluate_at(B, x, true);
                 Node* C_true = evaluate_at(C, x, true);
 
-                Node* R_false = ITE(A_false, B_false, C_false);
-                Node* R_true = ITE(A_true, B_true, C_true);
+                Node* R_false = cilk_spawn ITE(A_false, B_false, C_false);
+                Node* R_true = cilk_spawn ITE(A_true, B_true, C_true);
+
+                cilk_sync;
 
                 result = make(x, R_true, R_false);
             }
