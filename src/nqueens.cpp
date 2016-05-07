@@ -131,7 +131,7 @@ int main(int ac, char **argv)
     cout << "Elapsed time for BDD construction: " << end - start << " seconds" << std::endl;
 
     /* Print the results */
-//    queen.print("N-queens");
+    queen.print("N-queens: " + to_string(N));
     set<Variable> vars;
     for (int i = 0; i < N * N; i++)
         vars.insert((unsigned int)i);

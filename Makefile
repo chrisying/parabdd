@@ -7,13 +7,16 @@ OBJECTS=$(addprefix bin/,$(addsuffix .o,$(FILES)))
 
 .PHONY: all clean veryclean
 
-all: parabdd nqueens
+all: parabdd nqueens sat
 
 parabdd: $(OBJECTS) src/parabdd.cpp
 	$(CC) $(CFLAGS) $(OBJECTS) src/parabdd.cpp  -o parabdd
 
 nqueens: $(OBJECTS) src/nqueens.cpp
 	$(CC) $(CFLAGS) $(OBJECTS) src/nqueens.cpp -o nqueens
+
+sat: $(OBJECTS) src/sat.cpp
+	$(CC) $(CFLAGS) $(OBJECTS) src/sat.cpp -o sat
 
 bin/%.o: src/%.cpp src/bdd.h src/bdd_internal.h
 	$(CC) $(CFLAGS) -c $< -o $@

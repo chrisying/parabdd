@@ -163,6 +163,7 @@ namespace bdd {
 #define ID(uniq, x) "\"" << uniq << "_" << x << "\""
 
         static void print_rec(NodePtr node, std::set<NodePtr>& visited, NodePtr uniq) {
+            node = (is_complemented(node) ? complement(node) : node);
             if (visited.count(node)) {
                 return;
             }
@@ -170,7 +171,6 @@ namespace bdd {
                 return;
             }
             Node* p = pointer(node);
-            node = (is_complemented(node) ? complement(node) : node);
 
             std::cout << ID(uniq, node) << " [label=\"" << p->root << "\"];\n";
 
@@ -196,7 +196,12 @@ namespace bdd {
             std::cout << ID(node, false_node) << " [shape=box, label=\"false\", style=filled, height=0.3, width=0.3];\n";
 
             std::cout << ID(node, "f") << " [shape=triangle, label=\"f\", style=filled, height=0.3, width=0.3];\n";
-            std::cout << ID(node, "f") " -> " << ID(node, node) << " [style=filled]" << (is_complemented(node) ? "[color=red]" : "") << ";\n";
+            if (is_complemented(node)) {
+                std::cout << ID(node, "f") << " -> " << ID(node, complement(node)) << " [style=filled] [color=red];\n";
+            }
+            else {
+                std::cout << ID(node, "f") << " -> " << ID(node, node) << " [style=filled];\n";
+            }
 
             std::set<NodePtr> visited;
             print_rec(node, visited, node);

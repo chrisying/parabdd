@@ -26,15 +26,16 @@ int main() {
     map = c3.one_sat();
     assert(map[1] && !map[2]);
 
-    //Bdd c(2);
-    //Bdd e(3);
-    //Bdd f(4);
-    //Bdd g(5);
-    //Bdd h(6);
-    //Bdd i(7);
-    //Bdd j(8);
-    //Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
-    //g1.print();
+    Bdd c(2);
+    Bdd d(2);
+    Bdd e(3);
+    Bdd f(4);
+    Bdd g(5);
+    Bdd h(6);
+    Bdd i(7);
+    Bdd j(8);
+    Bdd g1 = ((d | c) & (i & j)) ^ ((g > h) < i) & ((e | f) | (c & f & j & i));
+    g1.print("Simple SAT Instance");
     //map = g1.one_sat();
     //assert((map[1] || map[2]) && (map[3] || map[4]));
 
@@ -106,7 +107,7 @@ int main() {
     Bdd t10 = (n1 > !n2) & (n1 > !n3);
     //t10.print("(n1 > !n2) & (n1 > !n3)");
 
-    f2.one_sat();   
+    f2.one_sat();
 
     std::cout << "All tests passed" << std::endl;
 
