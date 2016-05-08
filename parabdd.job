@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PBS -lwalltime=0:6:00
+
+# Move to my $SCRATCH directory.
+echo "NUM: " $CILK_NWORKERS
+cd $SCRATCH
+
+cp /home/mbryant/parabdd/nqueens nqueens
+export LD_LIBRARY_PATH=/home/mbryant/lib64/:$LD_LIBRARY_PATH
+
+./nqueens 5 > /dev/null  # Warm us up
+
+# Run my executable
+for i in {7..13}; do
+	./nqueens $i
+done
