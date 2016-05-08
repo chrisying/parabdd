@@ -41,12 +41,12 @@
 
 					<pre><code><span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> a(<span style="color:#E20">1</span>);</span>
 <span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> b(<span style="color:#E20">2</span>);</span>
-<span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> c = a &amp; b;</span>
+<span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> c = a &amp; !b;</span>
 
-// Gives one satisfying assignment to the expression (returns &lt;1:true, 2:true&gt;)
+// Gives one satisfying assignment to the expression (returns &lt;1:true, 2:false&gt;)
 <span style="color:#1E1E1E">unordered_map&lt;<span style="color:#EE7600">Var</span>, <span style="color: #EE7600">bool</span>&gt; map = c.one_sat();</span>
 
-// Count the number of satisfying assignments (returns 1 for a &amp; b)
+// Count the number of satisfying assignments (returns 1 for a &amp; !b)
 <span style="color:#1E1E1E"><span style="color:#EE7600">int</span> num = c.count_sat();</span></code></pre>
 
 					<p>The following mechanisms are required to generate the BDD:</p>
