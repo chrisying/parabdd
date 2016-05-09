@@ -28,7 +28,7 @@
 					<h2>
 						<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h2>
 
-					<p>We created a parallel binary decision diagram (BDD) library using CilkPlus which allows us to find and count satisfying assignments to arbitrary boolean expressions efficiently. Our implementation achieves ___ speedup on ___ cores and beats an existing BDD library by over an order of magnitude.</p>
+					<p>We created a parallel binary decision diagram (BDD) library using CilkPlus which allows us to find and count satisfying assignments to arbitrary boolean expressions efficiently. Our implementation achieves around 4x speedup on 16 cores and beats an existing BDD library by over 15x on large problems.</p>
 
 					<h2>
 						<a id="background" class="anchor" href="#background" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h2>
@@ -41,12 +41,12 @@
 
 					<pre><code><span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> a(<span style="color:#E20">1</span>);</span>
 <span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> b(<span style="color:#E20">2</span>);</span>
-<span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> c = a &amp; b;</span>
+<span style="color:#FF8C00">Bdd</span><span style="color:#1e1e1e"> c = a &amp; !b;</span>
 
-// Gives one satisfying assignment to the expression (returns &lt;1:true, 2:true&gt;)
+// Gives one satisfying assignment to the expression (returns &lt;1:true, 2:false&gt;)
 <span style="color:#1E1E1E">unordered_map&lt;<span style="color:#EE7600">Var</span>, <span style="color: #EE7600">bool</span>&gt; map = c.one_sat();</span>
 
-// Count the number of satisfying assignments (returns 1 for a &amp; b)
+// Count the number of satisfying assignments (returns 1 for a &amp; !b)
 <span style="color:#1E1E1E"><span style="color:#EE7600">int</span> num = c.count_sat();</span></code></pre>
 
 					<p>The following mechanisms are required to generate the BDD:</p>
@@ -81,86 +81,15 @@
 					<h2>
 						<a id="results" class="anchor" href="#results" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Results</h2>
 
-					<p>To benchmark our library, we implemented a naive N-queens algorithm and compared runtimes with BuDDy and our library using varying amounts of cores on the GHC machines.  We haven't finished analysis yet, but we present a quick survey of the results below.  In particular, we note a greater than 10x speedup over BuDDy when utilizing the entire machine on large BDDs.</p>
+                    <p>To benchmark our library, we implemented a naive N-queens algorithm and compared runtimes with BuDDy and our library using varying amounts of cores on the Unix machines. Since the majority of the runtime is dominated by the BDD construction step, we specifically timed that step for the following graphs.</p>
 
-					<table>
-						<tbody>
-							<tr>
-								<td></td>
-								<td colspan=4>Walltime (seconds)</td>
-							</tr>
-							<tr>
-								<td>N</td>
-								<td>Multicore ParaBDD</td>
-								<td>BuDDy</td>
-								<td>1-core ParaBDD</td>
-								<td>4-core ParaBDD</td>
-							</tr>
-							<tr>
-								<td>6</td>
-								<td>1.80</td>
-								<td>0.01</td>
-								<td>1.59</td>
-								<td>1.88</td>
-							</tr>
-							<tr>
-								<td>7</td>
-								<td>3.33</td>
-								<td>0.01</td>
-								<td>3.01</td>
-								<td>3.86</td>
-							</tr>
-							<tr>
-								<td>8</td>
-								<td>3.19</td>
-								<td>0.02</td>
-								<td>3.63</td>
-								<td>4.67</td>
-							</tr>
-							<tr>
-								<td>9</td>
-								<td>4.01</td>
-								<td>0.06</td>
-								<td>3.96</td>
-								<td>4.76</td>
-							</tr>
-							<tr>
-								<td>10</td>
-								<td>4.31</td>
-								<td>0.29</td>
-								<td>4.62</td>
-								<td>5.90</td>
-							</tr>
-							<tr>
-								<td>11</td>
-								<td>7.14</td>
-								<td>3.75</td>
-								<td>9.30</td>
-								<td>11.87</td>
-							</tr>
-							<tr>
-								<td>12</td>
-								<td>14.69</td>
-								<td>50.71</td>
-								<td>39.39</td>
-								<td>43.30</td>
-							</tr>
-							<tr>
-								<td>13</td>
-								<td>63.12</td>
-								<td>1060.59</td>
-								<td>213.20</td>
-								<td>173.45</td>
-							</tr>
-							<tr>
-								<td>14</td>
-								<td>356.78</td>
-								<td>&gt;3600</td>
-								<td>1485.84</td>
-								<td>1239.5</td>
-							</tr>
-						</tbody>
-					</table>
+					<p><img src="http://www.chrisying.net/parabdd/images/graph1.png" alt=""></p>
+
+                    This first graph shows our speedup versus the BuDDy library on a logarithmic scale. For small problem sizes, our library has higher overhead than BuDDy due to the extra costs of setting up multi-core execution. However, at large problem sizes, our parallel system scales much better than BuDDy, achieving over 15x speedup at 13-queens and even more at larger sizes.
+
+					<p><img src="http://www.chrisying.net/parabdd/images/graph2.png" alt=""></p>
+
+                    <p>This graph shows our scaling as we increase the number of cores utilized. At the small n-queens, the runtimes are all the same because granularity control makes them all run sequentially. At 10-queens and larger, we achieve around 2x to 4x speedup over our sequential code. We achieve sub-linear speedup because construction of BDD's has high dependencies and a large amount of inherently sequential code.</p>
 
 					<h2>
 						<a id="future-work" class="anchor" href="#future-work" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Future Work</h2>
@@ -172,12 +101,7 @@
 						<li>Garbage collection for unused BDD's to reduce the peak memory footprint</li>
 					</ul>
 
-					<p>In addition, in the process of designing the library, we encountered a few areas for improvement:</p>
-
-					<ul>
-						<li>Fork-join rescheduling in order to eliminate the rare chance of duplicated work (e.g. if another worker is currently doing a job, that job will never be done by another worker)</li>
-						<li>Granularity control in order to reduce the overhead of the fork-join parallelism (e.g. with a system like PASL)</li>
-					</ul>
+                    <p>In addition, in the process of designing the library, we encountered a major feature limitation of Cilk. Since there is a high amount of sharing, there is a small chance that work will be duplicated if one worker enters a job that another is already running. Ideally, what should happen is that the duplicated job should be descheduled and put at the end of the worker queue. Unfortunately Cilk does not provide this functionality. We hypothesize that this issue is a major limiting factor which prevents us from achieving near-linear speedup with higher numbers of cores.</p>
 
 					<h2>
 						<a id="references" class="anchor" href="#references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>References</h2>
